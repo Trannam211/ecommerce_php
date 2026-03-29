@@ -1,0 +1,137 @@
+/* Bootstrap 5 bridge for legacy Bootstrap 3 markup used in this project */
+
+.navbar-form {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.navbar-left {
+  float: left;
+}
+
+.navbar-right {
+  float: right;
+}
+
+.input-group-btn {
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.input-group-btn > .btn {
+  position: relative;
+  z-index: 2;
+}
+
+.pull-left {
+  float: left !important;
+}
+
+.pull-right {
+  float: right !important;
+}
+
+.center-block {
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.img-responsive {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.col-md-offset-1 { margin-left: 8.33333333%; }
+.col-md-offset-2 { margin-left: 16.66666667%; }
+.col-md-offset-3 { margin-left: 25%; }
+.col-md-offset-4 { margin-left: 33.33333333%; }
+.col-md-offset-5 { margin-left: 41.66666667%; }
+.col-md-offset-6 { margin-left: 50%; }
+.col-md-offset-7 { margin-left: 58.33333333%; }
+.col-md-offset-8 { margin-left: 66.66666667%; }
+.col-md-offset-9 { margin-left: 75%; }
+.col-md-offset-10 { margin-left: 83.33333333%; }
+.col-md-offset-11 { margin-left: 91.66666667%; }
+
+@media (max-width: 767.98px) {
+  .col-md-offset-1,
+  .col-md-offset-2,
+  .col-md-offset-3,
+  .col-md-offset-4,
+  .col-md-offset-5,
+  .col-md-offset-6,
+  .col-md-offset-7,
+  .col-md-offset-8,
+  .col-md-offset-9,
+  .col-md-offset-10,
+  .col-md-offset-11 {
+    margin-left: 0;
+  }
+}
+
+.visible-xs,
+.visible-sm,
+.visible-md,
+.visible-lg {
+  display: none !important;
+}
+
+.hidden-xs {
+  display: inherit !important;
+}
+
+@media (max-width: 767.98px) {
+  .hidden-xs {
+    display: none !important;
+  }
+
+  .visible-xs {
+    display: block !important;
+  }
+
+  .visible-xs-inline {
+    display: inline !important;
+  }
+
+  .visible-xs-inline-block {
+    display: inline-block !important;
+  }
+}
+
+.carousel-control {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  z-index: 5;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.carousel-control.left,
+.carousel-control-prev {
+  left: 0;
+}
+
+.carousel-control.right,
+.carousel-control-next {
+  right: 0;
+}
