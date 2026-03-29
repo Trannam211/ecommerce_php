@@ -19,14 +19,14 @@ if(!isset($_SESSION['customer'])) {
 
 <div class="page">
     <div class="container">
-        <div class="row">            
-            <div class="col-md-12"> 
+        <div class="account-layout">
+            <div class="account-sidebar-col"> 
                 <?php require_once('customer-sidebar.php'); ?>
             </div>
-            <div class="col-md-12">
-                <div class="user-content">
+            <div class="account-content-col">
+                <div class="user-content account-content-card">
                     <h3 class="text-center">
-                        <?php echo LANG_VALUE_90; ?>
+                        Tài khoản của tôi
                     </h3>
                 </div>                
             </div>

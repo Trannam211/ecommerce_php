@@ -15,12 +15,17 @@ foreach ($result as $row)
 }
 ?>
 
+<?php echo $before_body; ?>
+
 
 <div class="footer-bottom">
 	<div class="container">
 		<div class="row">
 			<div class="col-md-12 copyright">
-				<?php echo $footer_copyright; ?>
+                &copy; 2026 - Wizard Ecommerce. Bảo lưu mọi quyền.<br>
+                Phát triển bởi Trần Hữu Nam.<br>
+                Website được xây dựng trong khuôn khổ môn học Phát triển Web, nhằm mục đích nghiên cứu và thực hành xây dựng hệ thống thương mại điện tử.<br>
+                Dự án được thực hiện phục vụ mục đích học tập.
 			</div>
 		</div>
 	</div>
@@ -61,32 +66,17 @@ foreach ($result as $row) {
 	    return confirm("Bạn có chắc chắn muốn xóa dữ liệu này không?");
 	}
 	$(document).ready(function () {
-		advFieldsStatus = $('#advFieldsStatus').val();
-
-		$('#paypal_form').hide();
-		$('#stripe_form').hide();
-		$('#bank_form').hide();
-
-        $('#advFieldsStatus').on('change',function() {
-            advFieldsStatus = $('#advFieldsStatus').val();
-            if ( advFieldsStatus == '' ) {
-            	$('#paypal_form').hide();
-				$('#stripe_form').hide();
-				$('#bank_form').hide();
-            } else if ( advFieldsStatus == 'PayPal' ) {
-               	$('#paypal_form').show();
-				$('#stripe_form').hide();
-				$('#bank_form').hide();
-            } else if ( advFieldsStatus == 'Stripe' ) {
-               	$('#paypal_form').hide();
-				$('#stripe_form').show();
-				$('#bank_form').hide();
-            } else if ( advFieldsStatus == 'Bank Deposit' ) {
-            	$('#paypal_form').hide();
-				$('#stripe_form').hide();
-				$('#bank_form').show();
-            }
-        });
+        if($('#advFieldsStatus').length) {
+            $('#cod_form').hide();
+            $('#advFieldsStatus').on('change', function() {
+                var advFieldsStatus = $('#advFieldsStatus').val();
+                if(advFieldsStatus === 'Cash On Delivery') {
+                    $('#cod_form').show();
+                } else {
+                    $('#cod_form').hide();
+                }
+            });
+        }
 	});
 
 
@@ -117,6 +107,5 @@ foreach ($result as $row) {
         }
     }
 </script>
-<?php echo $before_body; ?>
 </body>
 </html>

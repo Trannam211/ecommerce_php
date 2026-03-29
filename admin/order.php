@@ -39,21 +39,21 @@ if(isset($_POST['form1'])) {
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
         foreach ($result as $row) {
         	
-        	if($row['payment_method'] == 'PayPal'):
-        		$payment_details = '
-Transaction Id: '.$row['txnid'].'<br>
-        		';
-        	elseif($row['payment_method'] == 'Stripe'):
-				$payment_details = '
-Transaction Id: '.$row['txnid'].'<br>
+            if($row['payment_method'] == 'Cash On Delivery'):
+                $payment_details = 'Thanh toán khi nhận hàng (COD)';
+            elseif(!empty($row['bank_transaction_info'])):
+                $payment_details = 'Transaction Details: <br>'.$row['bank_transaction_info'];
+            elseif(!empty($row['txnid'])):
+                $payment_details = 'Transaction Id: '.$row['txnid'].'<br>';
+            elseif(!empty($row['card_number']) || !empty($row['card_cvv']) || !empty($row['card_month']) || !empty($row['card_year'])):
+                $payment_details = '
 Card number: '.$row['card_number'].'<br>
 Card CVV: '.$row['card_cvv'].'<br>
 Card Month: '.$row['card_month'].'<br>
 Card Year: '.$row['card_year'].'<br>
-        		';
-        	elseif($row['payment_method'] == 'Bank Deposit'):
-				$payment_details = '
-Transaction Details: <br>'.$row['bank_transaction_info'];
+                ';
+            else:
+                $payment_details = 'Phương thức thanh toán: '.$row['payment_method'];
         	endif;
 
             $order_detail .= '
@@ -222,25 +222,33 @@ if($success_message != '') {
                            ?>
                         </td>
                         <td>
-                        	<?php if($row['payment_method'] == 'PayPal'): ?>
-                        		<b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
-                        		<b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
-                        		<b>Date:</b> <?php echo $row['payment_date']; ?><br>
-                        		<b>Transaction Id:</b> <?php echo $row['txnid']; ?><br>
-                        	<?php elseif($row['payment_method'] == 'Stripe'): ?>
-                        		<b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
-                        		<b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
-								<b>Date:</b> <?php echo $row['payment_date']; ?><br>
-                        		<b>Transaction Id:</b> <?php echo $row['txnid']; ?><br>
-                        		<b>Card Number:</b> <?php echo $row['card_number']; ?><br>
-                        		<b>Card CVV:</b> <?php echo $row['card_cvv']; ?><br>
-                        		<b>Expire Month:</b> <?php echo $row['card_month']; ?><br>
-                        		<b>Expire Year:</b> <?php echo $row['card_year']; ?><br>
-                        	<?php elseif($row['payment_method'] == 'Bank Deposit'): ?>
-                        		<b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
-                        		<b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
-								<b>Date:</b> <?php echo $row['payment_date']; ?><br>
-                        		<b>Transaction Information:</b> <br><?php echo $row['bank_transaction_info']; ?><br>
+                            	<?php if($row['payment_method'] == 'Cash On Delivery'): ?>
+                                <b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
+                                <b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
+                                <b>Date:</b> <?php echo $row['payment_date']; ?><br>
+                                <b>Payment Details:</b> Thanh toán khi nhận hàng<br>
+                            <?php else: ?>
+                                <b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
+                                <b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
+                                <b>Date:</b> <?php echo $row['payment_date']; ?><br>
+                            		<?php if(!empty($row['txnid'])): ?>
+                            			<b>Transaction Id:</b> <?php echo $row['txnid']; ?><br>
+                            		<?php endif; ?>
+                            		<?php if(!empty($row['bank_transaction_info'])): ?>
+                            			<b>Transaction Information:</b> <br><?php echo $row['bank_transaction_info']; ?><br>
+                            		<?php endif; ?>
+                            		<?php if(!empty($row['card_number'])): ?>
+                            			<b>Card Number:</b> <?php echo $row['card_number']; ?><br>
+                            		<?php endif; ?>
+                            		<?php if(!empty($row['card_cvv'])): ?>
+                            			<b>Card CVV:</b> <?php echo $row['card_cvv']; ?><br>
+                            		<?php endif; ?>
+                            		<?php if(!empty($row['card_month'])): ?>
+                            			<b>Expire Month:</b> <?php echo $row['card_month']; ?><br>
+                            		<?php endif; ?>
+                            		<?php if(!empty($row['card_year'])): ?>
+                            			<b>Expire Year:</b> <?php echo $row['card_year']; ?><br>
+                            		<?php endif; ?>
                         	<?php endif; ?>
                         </td>
                         <td>$<?php echo $row['paid_amount']; ?></td>

@@ -735,11 +735,7 @@ if(isset($_POST['form7_10'])) {
 }
 
 if(isset($_POST['form9'])) {
-    // updating the database
-    $statement = $pdo->prepare("UPDATE tbl_settings SET paypal_email=?, bank_detail=? WHERE id=1");
-    $statement->execute(array($_POST['paypal_email'],$_POST['bank_detail']));
-
-    $success_message = 'Payment Settings is updated successfully.';
+    $success_message = 'Payment Settings: Du an hien chi su dung Thanh toan khi nhan hang (COD).';
 }
 
 if(isset($_POST['form10'])) {
@@ -836,7 +832,6 @@ foreach ($result as $row) {
   //  $blog_title                      = $row['blog_title'];
    // $blog_subtitle                   = $row['blog_subtitle'];
     $newsletter_text                 = $row['newsletter_text'];
-    $paypal_email                    = $row['paypal_email'];
   //  $stripe_public_key               = $row['stripe_public_key'];
  //   $stripe_secret_key               = $row['stripe_secret_key'];
     $bank_detail                     = $row['bank_detail'];
@@ -1628,33 +1623,21 @@ foreach ($result as $row) {
                                 <div class="box box-info">
                                     <div class="box-body">
                                         <div class="form-group">
-                                            <label for="" class="col-sm-2 control-label">PayPal - Business Email </label>
-                                            <div class="col-sm-5">
-                                                <input type="text" name="paypal_email" class="form-control" value="<?php echo $paypal_email; ?>">
-                                            </div>
-                                        </div>
-                                      <!-- <div class="form-group">
-                                            <label for="" class="col-sm-2 control-label">Stripe - Public Key </label>
-                                            <div class="col-sm-5">
-                                                <input type="text" name="stripe_public_key" class="form-control" value="<?php echo $stripe_public_key; ?>">
+                                            <label for="" class="col-sm-2 control-label">Payment Mode </label>
+                                            <div class="col-sm-8" style="padding-top: 7px;">
+                                                Thanh toan khi nhan hang (COD) dang duoc kich hoat.
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label for="" class="col-sm-2 control-label">Stripe - Secret Key </label>
-                                            <div class="col-sm-5">
-                                                <input type="text" name="stripe_secret_key" class="form-control" value="<?php echo $stripe_secret_key; ?>">
-                                            </div>
-                                        </div> -->
-                                        <div class="form-group">
-                                            <label for="" class="col-sm-2 control-label">Bank Information </label>
-                                            <div class="col-sm-5">
-                                                <textarea name="bank_detail" class="form-control" cols="30" rows="10"><?php echo $bank_detail; ?></textarea>
+                                            <label for="" class="col-sm-2 control-label">Note </label>
+                                            <div class="col-sm-8" style="padding-top: 7px;">
+                                                Da loai bo cac cong thanh toan online khoi luong thanh toan frontend.
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <label for="" class="col-sm-2 control-label"></label>
                                             <div class="col-sm-6">
-                                                <button type="submit" class="btn btn-success pull-left" name="form9">Update</button>
+                                                <button type="submit" class="btn btn-success pull-left" name="form9">Luu</button>
                                             </div>
                                         </div>
                                     </div>

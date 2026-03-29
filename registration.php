@@ -157,57 +157,36 @@ if (isset($_POST['form1'])) {
                                         cust_name,
                                         cust_email,
                                         cust_phone,
-                                        cust_address,
-                                        cust_city,
-                                        cust_state,
-                                        cust_b_name,
-                                        cust_b_phone,
-                                        cust_b_address,
-                                        cust_b_city,
-                                        cust_b_state,
-                                        cust_s_name,
-                                        cust_s_phone,
-                                        
-                                        cust_s_address,
-                                        cust_s_city,
-                                        cust_s_state,
                                         cust_password,
                                         cust_token,
                                         cust_datetime,
                                         cust_timestamp,
-                                        cust_status,
-                                        cust_province_id,
-                                        cust_district_id,
-                                        cust_ward_id
-                                    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                                        cust_status
+                                    ) VALUES (?,?,?,?,?,?,?,?)");
         $statement->execute(array(
                                         $cust_name_input,
                                         strip_tags($_POST['cust_email']),
                                         $cust_phone_input,
-                                        $cust_address_input,
-                                        $province_name,
-                                        $district_name . ' - ' . $ward_name,
-                                        '',
-                                        '',
-                                        '',
-                                        '',
-                                        '',
-                                        '',
-                                        '',
-                                        '',
-                                        '',
-                                        '',
                                         md5($cust_password_input),
                                         $token,
                                         $cust_datetime,
                                         $cust_timestamp,
-                                        1,
-                                        $cust_province_id,
-                                        $cust_district_id,
-                                        $cust_ward_id
+                                        1
                                     ));
 
         $new_customer_id = (int)$pdo->lastInsertId();
+
+        $statement = $pdo->prepare("INSERT INTO tbl_customer_address (cust_id, receiver_name, receiver_phone, address_line, city, district, ward, is_default) VALUES (?,?,?,?,?,?,?,1)");
+        $statement->execute(array(
+                                        $new_customer_id,
+                                        $cust_name_input,
+                                        $cust_phone_input,
+                                        $cust_address_input,
+                                        $province_name,
+                                        $district_name,
+                                        $ward_name
+                                    ));
+
         $statement = $pdo->prepare("SELECT * FROM tbl_customer WHERE cust_id=? LIMIT 1");
         $statement->execute(array($new_customer_id));
         $new_customer = $statement->fetch(PDO::FETCH_ASSOC);
@@ -246,7 +225,7 @@ if (isset($_POST['form1'])) {
     .register-card {
         background: #fff;
         border: 1px solid #e7eaf0;
-        border-radius: 14px;
+        border-radius: 0;
         box-shadow: 0 12px 30px rgba(15, 35, 95, 0.08);
         overflow: hidden;
     }
@@ -281,7 +260,7 @@ if (isset($_POST['form1'])) {
     }
 
     .register-card .form-control {
-        border-radius: 8px;
+        border-radius: 0;
         border-color: #d8e0ec;
         min-height: 42px;
     }
@@ -308,8 +287,8 @@ if (isset($_POST['form1'])) {
         border: 0;
         border-left: 1px solid #d8e0ec;
         background: #f8fafc;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
         color: #355579;
         padding: 0;
     }
@@ -326,7 +305,7 @@ if (isset($_POST['form1'])) {
 
     .register-card .btn-register {
         min-width: 150px;
-        border-radius: 8px;
+        border-radius: 0;
         font-weight: 700;
         letter-spacing: 0.3px;
     }
@@ -354,10 +333,10 @@ if (isset($_POST['form1'])) {
 
                             <?php
                             if($error_message != '') {
-                                echo "<div class='error' style='padding: 12px;background:#fff4f4;border:1px solid #f3c9c9;border-radius:8px;margin-bottom:18px;'>".$error_message."</div>";
+                                echo "<div class='error' style='padding: 12px;background:#fff4f4;border:1px solid #f3c9c9;margin-bottom:18px;'>".$error_message."</div>";
                             }
                             if($success_message != '') {
-                                echo "<div class='success' style='padding: 12px;background:#f2fbf5;border:1px solid #b9e6c6;border-radius:8px;margin-bottom:18px;'>".$success_message."</div>";
+                                echo "<div class='success' style='padding: 12px;background:#f2fbf5;border:1px solid #b9e6c6;margin-bottom:18px;'>".$success_message."</div>";
                             }
                             ?>
 
@@ -446,6 +425,10 @@ if (isset($_POST['form1'])) {
                             <div class="register-submit-wrap">
                                 <input type="submit" class="btn btn-danger btn-register" value="Đăng ký" name="form1">
                             </div>
+                            <p class="login-register-hint" style="margin-top:14px;">
+                                Đã có tài khoản?
+                                <a href="login.php">Đăng nhập ngay</a>
+                            </p>
                         </form>
                     </div>
                 </div>

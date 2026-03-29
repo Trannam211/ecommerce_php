@@ -26,6 +26,7 @@ define("ADMIN_URL", BASE_URL . "admin" . "/");
 try {
 	$pdo = new PDO("mysql:host={$dbhost};dbname={$dbname};charset=utf8mb4", $dbuser, $dbpass);
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 }
 catch( PDOException $exception ) {
 	echo "Connection error :" . $exception->getMessage();

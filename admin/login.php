@@ -1,5 +1,6 @@
 <?php
-ob_start();
+include("inc/vn_admin_translate.php");
+ob_start('vn_admin_translate');
 session_start();
 include("inc/config.php");
 include("inc/functions.php");

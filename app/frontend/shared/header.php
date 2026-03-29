@@ -1,5 +1,6 @@
 <?php
-ob_start();
+include("app/frontend/shared/lang_vi.php");
+ob_start('vn_frontend_translate');
 session_start();
 include("admin/inc/config.php");
 include("admin/inc/functions.php");
@@ -10,15 +11,8 @@ $success_message = '';
 $error_message1 = '';
 $success_message1 = '';
 
-// Getting all language variables into array as global variable
-$i=1;
-$statement = $pdo->prepare("SELECT * FROM tbl_language");
-$statement->execute();
-$result = $statement->fetchAll(PDO::FETCH_ASSOC);							
-foreach ($result as $row) {
-	define('LANG_VALUE_'.$i,$row['lang_value']);
-	$i++;
-}
+// Load static Vietnamese language constants from code (no database dependency)
+vn_load_frontend_language_constants();
 
 $statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
 $statement->execute();
@@ -180,7 +174,7 @@ foreach ($result as $row) {
 	}
 	if($cur_page == 'customer-billing-shipping-update.php') {
 		?>
-		<title>Cập nhật thông tin thanh toán và giao hàng - <?php echo $meta_title_home; ?></title>
+		<title>Địa chỉ của tôi - <?php echo $meta_title_home; ?></title>
 		<meta name="keywords" content="<?php echo $meta_keyword_home; ?>">
 		<meta name="description" content="<?php echo $meta_description_home; ?>">
 		<?php
@@ -291,9 +285,21 @@ foreach ($result as $row) {
 					
 					<?php
 					if(isset($_SESSION['customer'])) {
+						$header_avatar = 'default-avatar.svg';
+						if(isset($_SESSION['customer']['cust_photo']) && $_SESSION['customer']['cust_photo'] !== '') {
+							$candidate_avatar = basename($_SESSION['customer']['cust_photo']);
+							$avatar_disk_path = __DIR__ . '/../../../assets/uploads/' . $candidate_avatar;
+							if(file_exists($avatar_disk_path)) {
+								$header_avatar = $candidate_avatar;
+							}
+						}
 						?>
 						<li class="account-menu">
-							<a href="#"><i class="fa fa-user-circle"></i> <?php echo $_SESSION['customer']['cust_name']; ?> <i class="fa fa-angle-down"></i></a>
+							<a href="#">
+								<span class="account-avatar"><img src="assets/uploads/<?php echo htmlspecialchars($header_avatar, ENT_QUOTES, 'UTF-8'); ?>" alt="Avatar"></span>
+								<?php echo $_SESSION['customer']['cust_name']; ?>
+								<i class="fa fa-angle-down"></i>
+							</a>
 							<ul class="account-dropdown">
 								<li><a href="dashboard.php"><i class="fa fa-user"></i> Tài khoản của tôi</a></li>
 								<li><a href="logout.php"><i class="fa fa-sign-out"></i> Đăng xuất</a></li>

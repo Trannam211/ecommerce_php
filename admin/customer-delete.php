@@ -22,6 +22,10 @@ if(!isset($_REQUEST['id'])) {
 	$statement = $pdo->prepare("DELETE FROM tbl_customer WHERE cust_id=?");
 	$statement->execute(array($_REQUEST['id']));
 
+	// Delete from tbl_customer_address
+	$statement = $pdo->prepare("DELETE FROM tbl_customer_address WHERE cust_id=?");
+	$statement->execute(array($_REQUEST['id']));
+
 	// Delete from tbl_rating
 	$statement = $pdo->prepare("DELETE FROM tbl_rating WHERE cust_id=?");
 	$statement->execute(array($_REQUEST['id']));

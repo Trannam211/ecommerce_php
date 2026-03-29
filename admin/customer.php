@@ -17,7 +17,7 @@
 								<th width="10">#</th>
 								<th width="180">Name</th>
 								<th width="150">Email Address</th>
-								<th width="180">Country, City, State</th>
+								<th width="220">City, District, Ward</th>
 								<th>Status</th>
 								<th width="100">Change Status</th>
 								<th width="100">Action</th>
@@ -26,7 +26,11 @@
 						<tbody>
 							<?php
 							$i=0;
-							$statement = $pdo->prepare("SELECT * FROM tbl_customer");
+							$statement = $pdo->prepare("SELECT c.*, 
+                                (SELECT ca.city FROM tbl_customer_address ca WHERE ca.cust_id=c.cust_id ORDER BY ca.is_default DESC, ca.address_id ASC LIMIT 1) AS default_city,
+                                (SELECT ca.district FROM tbl_customer_address ca WHERE ca.cust_id=c.cust_id ORDER BY ca.is_default DESC, ca.address_id ASC LIMIT 1) AS default_district,
+                                (SELECT ca.ward FROM tbl_customer_address ca WHERE ca.cust_id=c.cust_id ORDER BY ca.is_default DESC, ca.address_id ASC LIMIT 1) AS default_ward
+                                FROM tbl_customer c");
 							$statement->execute();
 							$result = $statement->fetchAll(PDO::FETCH_ASSOC);						
 							foreach ($result as $row) {
@@ -37,8 +41,9 @@
 									<td><?php echo $row['cust_name']; ?></td>
 									<td><?php echo $row['cust_email']; ?></td>
 									<td>
-										<?php echo $row['cust_city']; ?><br>
-										<?php echo $row['cust_state']; ?>
+										<?php echo isset($row['default_city']) ? $row['default_city'] : ''; ?><br>
+										<?php echo isset($row['default_district']) ? $row['default_district'] : ''; ?><br>
+										<?php echo isset($row['default_ward']) ? $row['default_ward'] : ''; ?>
 									</td>
 									<td><?php if($row['cust_status']==1) {echo 'Active';} else {echo 'Inactive';} ?></td>
 									<td>
