@@ -13,7 +13,7 @@ if(isset($_POST['form1'])) {
         $file_name = basename( $path, '.' . $ext );
         if( $ext!='jpg' && $ext!='png' && $ext!='jpeg' && $ext!='gif' ) {
             $valid = 0;
-            $error_message .= 'You must have to upload jpg, jpeg, gif or png file<br>';
+			$error_message .= 'Bạn chỉ được tải lên tệp jpg, jpeg, gif hoặc png<br>';
         }
     }
 
@@ -33,7 +33,7 @@ if(isset($_POST['form1'])) {
     		$statement->execute(array($final_name,$_POST['heading'],$_POST['content'],$_POST['button_text'],$_POST['button_url'],$_POST['position'],$_REQUEST['id']));
 		}	   
 
-	    $success_message = 'Slider is updated successfully!';
+	    $success_message = 'Đã cập nhật slider thành công!';
 	}
 }
 ?>
@@ -60,7 +60,7 @@ if(!isset($_REQUEST['id'])) {
 		<h1>Sửa Slider</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="slider.php" class="btn btn-primary btn-sm">View All</a>
+		<a href="slider.php" class="btn btn-primary btn-sm">Xem danh sách</a>
 	</div>
 </section>
 
@@ -104,46 +104,46 @@ foreach ($result as $row) {
 						<div class="form-group">
 							<label for="" class="col-sm-2 control-label">Ảnh hiện tại</label>
 							<div class="col-sm-9" style="padding-top:5px">
-								<img src="../assets/uploads/<?php echo $photo; ?>" alt="Slider Photo" style="width:400px;">
+								<img src="../assets/uploads/<?php echo $photo; ?>" alt="Ảnh slider" style="width:400px;">
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Photo </label>
+							<label for="" class="col-sm-2 control-label">Hình ảnh </label>
 							<div class="col-sm-6" style="padding-top:5px">
-								<input type="file" name="photo">(Only jpg, jpeg, gif and png are allowed)
+								<input type="file" name="photo">(Chỉ chấp nhận jpg, jpeg, gif, png)
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Heading </label>
+							<label for="" class="col-sm-2 control-label">Tiêu đề </label>
 							<div class="col-sm-6">
 								<input type="text" autocomplete="off" class="form-control" name="heading" value="<?php echo $heading; ?>">
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Content </label>
+							<label for="" class="col-sm-2 control-label">Nội dung </label>
 							<div class="col-sm-6">
 								<textarea class="form-control" name="content" style="height:140px;"><?php echo $content; ?></textarea>
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Button Text </label>
+							<label for="" class="col-sm-2 control-label">Chữ trên nút </label>
 							<div class="col-sm-6">
 								<input type="text" autocomplete="off" class="form-control" name="button_text" value="<?php echo $button_text; ?>">
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Button URL </label>
+							<label for="" class="col-sm-2 control-label">Liên kết nút </label>
 							<div class="col-sm-6">
 								<input type="text" autocomplete="off" class="form-control" name="button_url" value="<?php echo $button_url; ?>">
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Position </label>
+							<label for="" class="col-sm-2 control-label">Vị trí </label>
 							<div class="col-sm-6">
 								<select name="position" class="form-control">
-									<option value="Left" <?php if($position == 'Left') {echo 'selected';} ?>>Left</option>
-									<option value="Center" <?php if($position == 'Center') {echo 'selected';} ?>>Center</option>
-									<option value="Right" <?php if($position == 'Right') {echo 'selected';} ?>>Right</option>
+									<option value="Left" <?php if($position == 'Left') {echo 'selected';} ?>>Trái</option>
+									<option value="Center" <?php if($position == 'Center') {echo 'selected';} ?>>Giữa</option>
+									<option value="Right" <?php if($position == 'Right') {echo 'selected';} ?>>Phải</option>
 								</select>
 							</div>
 						</div>				

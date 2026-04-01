@@ -2,9 +2,19 @@
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Xem khách hàng</h1>
+		<h1>Quản lý người dùng</h1>
 	</div>
 </section>
+
+<style>
+	.customer-actions {
+		display: flex;
+		gap: 6px;
+		align-items: center;
+		justify-content: center;
+		white-space: nowrap;
+	}
+</style>
 
 <section class="content">
 	<div class="row">
@@ -19,8 +29,8 @@
 								<th width="150">Email</th>
 								<th width="220">Tỉnh/Thành phố, Quận/Huyện, Phường/Xã</th>
 								<th>Trạng thái</th>
-								<th width="100">Đổi trạng thái</th>
-								<th width="100">Thao tác</th>
+								<th width="110">Khóa/Mở khóa</th>
+								<th width="170">Thao tác</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -47,10 +57,17 @@
 									</td>
 									<td><?php if($row['cust_status']==1) {echo 'Hoạt động';} else {echo 'Tạm khóa';} ?></td>
 									<td>
-										<a href="customer-change-status.php?id=<?php echo $row['cust_id']; ?>" class="btn btn-success btn-xs">Đổi trạng thái</a>
+										<?php if($row['cust_status']==1): ?>
+											<a href="customer-change-status.php?id=<?php echo $row['cust_id']; ?>" class="btn btn-warning btn-sm">Khóa</a>
+										<?php else: ?>
+											<a href="customer-change-status.php?id=<?php echo $row['cust_id']; ?>" class="btn btn-success btn-sm">Mở khóa</a>
+										<?php endif; ?>
 									</td>
 									<td>
-										<a href="#" class="btn btn-danger btn-xs" data-href="customer-delete.php?id=<?php echo $row['cust_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>
+										<div class="customer-actions">
+											<a href="customer-edit.php?id=<?php echo $row['cust_id']; ?>" class="btn btn-primary btn-sm">Sửa</a>
+											<a href="#" class="btn btn-danger btn-sm" data-href="customer-delete.php?id=<?php echo $row['cust_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>
+										</div>
 									</td>
 								</tr>
 								<?php

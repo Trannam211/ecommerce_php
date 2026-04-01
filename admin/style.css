@@ -322,3 +322,252 @@ select {
 .bg-r {
   background: #f9cccc !important;
 }
+
+/* Unified admin form layout: avoid label/input jitter across pages */
+@media (min-width: 992px) {
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .form-group {
+    display: flex;
+    align-items: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .control-label {
+    float: none;
+    flex: 0 0 260px;
+    width: 260px;
+    max-width: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    margin-right: 14px;
+    padding-right: 0;
+    padding-top: 0;
+    margin-bottom: 0;
+    line-height: 1.35;
+  }
+
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .form-group > div[class*="col-sm-"] {
+    float: none;
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .form-group.form-group-top {
+    align-items: flex-start;
+  }
+
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .form-group.form-group-top .control-label {
+    align-items: flex-start;
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 991px) {
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .form-group {
+    display: block;
+  }
+
+  .content .form-horizontal:not(.product-add-form):not(.product-edit-form) .control-label {
+    width: 100%;
+    max-width: none;
+    text-align: left;
+    padding-right: 0;
+    margin-bottom: 6px;
+  }
+}
+
+/* Admin action buttons: medium size, clean, square corners */
+.table td .btn,
+.table th .btn,
+.modal-footer .btn {
+  border-radius: 0 !important;
+}
+
+.table td .btn.btn-xs,
+.table td .btn.btn-sm {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 6px 10px;
+  min-width: 68px;
+}
+
+/* DataTables: remove sort arrows/icons in header */
+table.dataTable thead .sorting,
+table.dataTable thead .sorting_asc,
+table.dataTable thead .sorting_desc,
+table.dataTable thead .sorting_asc_disabled,
+table.dataTable thead .sorting_desc_disabled {
+  background-image: none !important;
+  padding-right: 10px !important;
+}
+
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:after {
+  display: none !important;
+}
+
+/* DataTables controls: blue style like customer pages */
+.dataTables_wrapper .row:first-child {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #d8e6f5;
+  background: #f6faff;
+}
+
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_length {
+  margin: 0;
+}
+
+.dataTables_wrapper .dataTables_filter label,
+.dataTables_wrapper .dataTables_length label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2f5e96;
+}
+
+.dataTables_wrapper .dataTables_filter label {
+  justify-content: flex-end;
+}
+
+.dataTables_wrapper .dataTables_filter .dt-search-text {
+  white-space: nowrap;
+}
+
+.dataTables_wrapper .dataTables_length select {
+  height: 38px;
+  border: 1px solid #9fc0e4;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: none;
+  color: #1f2d3d;
+  font-size: 13px;
+  line-height: 1.2;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-left: 0 !important;
+}
+
+.dataTables_wrapper .dataTables_filter .dt-search-box {
+  display: inline-flex;
+  align-items: stretch;
+  height: 38px;
+  border: 1px solid #9fc0e4;
+  background: #fff;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.dataTables_wrapper .dataTables_filter .dt-search-box input {
+  width: 190px !important;
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  border: 0;
+  border-right: 1px solid #9fc0e4;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 10px;
+  margin: 0 !important;
+  color: #1f2d3d;
+}
+
+.dataTables_wrapper .dataTables_filter .dt-search-box input::placeholder {
+  color: #8fa9c5;
+}
+
+.dataTables_wrapper .dataTables_filter .btn-dt-search {
+  height: 100%;
+  min-width: 96px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 0 14px;
+  background: #3c8dbc;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  box-shadow: none;
+  vertical-align: top;
+}
+
+.dataTables_wrapper .dataTables_filter .btn-dt-search:hover,
+.dataTables_wrapper .dataTables_filter .btn-dt-search:focus {
+  background: #367fa9;
+  color: #fff;
+  outline: 0;
+}
+
+.dataTables_wrapper .dataTables_length select {
+  width: 76px !important;
+  min-width: 76px;
+  padding: 6px 24px 6px 8px;
+}
+
+.dataTables_wrapper .dataTables_filter .dt-search-box:focus-within {
+  border-color: #3c8dbc;
+  box-shadow: 0 0 0 2px rgba(60, 141, 188, 0.15);
+}
+
+.dataTables_wrapper .dataTables_filter .dt-search-box input:focus {
+  outline: 0;
+  box-shadow: none;
+}
+
+.dataTables_wrapper .dataTables_length select:focus {
+  border-color: #3c8dbc;
+  box-shadow: 0 0 0 2px rgba(60, 141, 188, 0.15);
+  outline: 0;
+}
+
+@media (max-width: 991px) {
+  .dataTables_wrapper .row:first-child {
+    padding: 10px;
+  }
+
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_length {
+    text-align: left;
+    margin-bottom: 8px;
+  }
+
+  .dataTables_wrapper .dataTables_filter label,
+  .dataTables_wrapper .dataTables_length label {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dataTables_wrapper .dataTables_filter label {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dataTables_wrapper .dataTables_filter .dt-search-box {
+    width: 100%;
+  }
+
+  .dataTables_wrapper .dataTables_filter .dt-search-box input {
+    width: 100% !important;
+    min-width: 180px;
+    flex: 1 1 auto;
+  }
+}

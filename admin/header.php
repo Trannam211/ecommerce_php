@@ -26,7 +26,7 @@ if(!isset($_SESSION['user'])) {
 
 	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/font-awesome.min.css">
 	<link rel="stylesheet" href="css/ionicons.min.css">
 	<link rel="stylesheet" href="css/datepicker3.css">
@@ -160,7 +160,7 @@ if(!isset($_SESSION['user'])) {
 
 						<li class="treeview <?php if( ($cur_page == 'customer.php') || ($cur_page == 'customer-add.php') || ($cur_page == 'customer-edit.php') ) {echo 'active';} ?>">
 			          <a href="customer.php">
-			            <i class="fa fa-user-plus"></i> <span>Khách hàng đã đăng ký</span>
+			            <i class="fa fa-user-plus"></i> <span>Quản lý người dùng</span>
 			          </a>
 			        </li>
 

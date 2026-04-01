@@ -30,3 +30,7 @@ Each bridge file forwards to its real implementation under `app/frontend/shared/
 - Public URLs remain unchanged.
 - Existing `require_once('header.php')` and similar includes continue to work.
 - SQL import path is now `database/ecommerceweb.sql`.
+
+## Setup notes
+
+- XAMPP MySQL/MariaDB utf8mb4 (tiếng Việt): `docs/project-info/xampp-mysql-utf8mb4.md`.

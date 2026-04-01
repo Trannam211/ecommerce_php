@@ -59,7 +59,6 @@ Tên khách hàng: '.$row['customer_name'].'<br>
 Email khách hàng: '.$row['customer_email'].'<br>
 Phương thức thanh toán: '.format_payment_method_vi($row['payment_method']).'<br>
 Ngày thanh toán: '.$row['payment_date'].'<br>
-Chi tiết thanh toán: <br>'.$payment_details.'<br>
 Số tiền đã thanh toán: '.format_price_vnd($row['paid_amount']).'<br>
 Trạng thái thanh toán: '.format_payment_status_vi($row['payment_status']).'<br>
 Trạng thái giao hàng: '.format_shipping_status_vi($row['shipping_status']).'<br>
@@ -79,7 +78,6 @@ Tên sản phẩm: '.$row['product_name'].'<br>
 Kích cỡ: '.$row['size'].'<br>
 Màu sắc: '.$row['color'].'<br>
 Số lượng: '.$row['quantity'].'<br>
-Đơn giá: '.format_price_vnd($row['unit_price']).'<br>
             ';
         }
 
@@ -233,6 +231,11 @@ foreach($all_admin_orders as $admin_order_row) {
     margin-bottom: 0;
 }
 
+.admin-order-table {
+    width: 100% !important;
+    table-layout: fixed;
+}
+
 #example1 thead th {
     background: #f9fafc;
     border-color: #dfe4ea;
@@ -241,13 +244,54 @@ foreach($all_admin_orders as $admin_order_row) {
     text-transform: uppercase;
     letter-spacing: 0.4px;
     padding: 13px 12px;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 #example1 tbody td {
     border-color: #e6e9ee;
     padding: 14px 12px;
     vertical-align: top;
+    word-break: break-word;
+}
+
+#example1 thead th:nth-child(1),
+#example1 tbody td:nth-child(1) {
+    width: 56px;
+    white-space: nowrap;
+}
+
+#example1 thead th:nth-child(2),
+#example1 tbody td:nth-child(2) {
+    width: 17%;
+}
+
+#example1 thead th:nth-child(3),
+#example1 tbody td:nth-child(3) {
+    width: 19%;
+}
+
+#example1 thead th:nth-child(4),
+#example1 tbody td:nth-child(4) {
+    width: 18%;
+}
+
+#example1 thead th:nth-child(5),
+#example1 tbody td:nth-child(5) {
+    width: 10%;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#example1 thead th:nth-child(6),
+#example1 tbody td:nth-child(6),
+#example1 thead th:nth-child(7),
+#example1 tbody td:nth-child(7) {
+    width: 12%;
+}
+
+#example1 thead th:nth-child(8),
+#example1 tbody td:nth-child(8) {
+    width: 12%;
 }
 
 #example1 tbody tr.order-row {
@@ -277,16 +321,19 @@ foreach($all_admin_orders as $admin_order_row) {
 }
 
 .order-customer-email {
-    font-size: 12px;
+    font-size: 13px;
     color: #888;
     margin-bottom: 10px;
-    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .btn-message-customer {
     width: 100%;
     border-radius: 6px;
     margin-bottom: 4px;
+    font-size: 12px;
+    padding: 6px 8px;
 }
 
 .order-product-item {
@@ -338,7 +385,31 @@ foreach($all_admin_orders as $admin_order_row) {
     font-size: 15px;
     font-weight: 700;
     color: #333;
-    white-space: nowrap;
+    word-break: break-word;
+    text-align: center;
+}
+
+.order-cell-status {
+    text-align: center;
+    vertical-align: middle !important;
+}
+
+.order-cell-status .status-badge {
+    min-width: 112px;
+    margin: 0 auto 8px;
+}
+
+.order-cell-status .btn-payment-complete,
+.order-status-actions .btn {
+    width: 170px;
+    max-width: 100%;
+    margin: 0 auto 6px;
+    display: block;
+}
+
+.order-status-actions {
+    max-width: 170px;
+    margin: 0 auto;
 }
 
 .status-badge {
@@ -387,7 +458,8 @@ foreach($all_admin_orders as $admin_order_row) {
 }
 
 .order-actions .btn {
-    width: 100%;
+    width: 136px;
+    max-width: 100%;
     border-radius: 6px;
     display: inline-flex;
     align-items: center;
@@ -395,6 +467,18 @@ foreach($all_admin_orders as $admin_order_row) {
     gap: 6px;
     margin-bottom: 6px;
     font-weight: 600;
+    font-size: 12px;
+    padding: 6px 8px;
+}
+
+.order-actions {
+    text-align: center;
+    vertical-align: middle !important;
+}
+
+.order-actions .btn {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .order-actions .btn:last-child {
@@ -504,7 +588,7 @@ foreach($all_admin_orders as $admin_order_row) {
                        <div class="order-customer-code">Mã KH: #<?php echo $row['customer_id']; ?></div>
                        <div class="order-customer-name"><?php echo $row['customer_name']; ?></div>
                        <div class="order-customer-email"><?php echo $row['customer_email']; ?></div>
-                       <a href="#" data-toggle="modal" data-target="#model-<?php echo $i; ?>" class="btn btn-warning btn-xs btn-message-customer"><i class="fa fa-envelope-o"></i> Gửi tin nhắn</a>
+                       <a href="#" data-toggle="modal" data-target="#model-<?php echo $i; ?>" class="btn btn-warning btn-sm btn-message-customer"><i class="fa fa-envelope-o"></i> Gửi tin nhắn</a>
                             <div id="model-<?php echo $i; ?>" class="modal fade" role="dialog">
 								<div class="modal-dialog">
 									<div class="modal-content">
@@ -531,7 +615,7 @@ foreach($all_admin_orders as $admin_order_row) {
                                                     </tr>
 													<tr>
 														<td></td>
-                                                        <td><input type="submit" value="Gửi tin nhắn" name="form1"></td>
+                                                        <td><input type="submit" value="Gửi tin nhắn" name="form1" class="btn btn-warning btn-sm"></td>
 													</tr>
 												</table>
 											</form>
@@ -552,7 +636,7 @@ foreach($all_admin_orders as $admin_order_row) {
                                 echo '<div class="order-product-item">';
                                 echo '<div class="order-product-name">'.$row1['product_name'].'</div>';
                                 echo '<div class="order-product-meta">Kích cỡ: '.$row1['size'].' | Màu sắc: '.$row1['color'].'</div>';
-                                echo '<div class="order-product-meta">Số lượng: '.$row1['quantity'].' | Đơn giá: '.format_price_vnd($row1['unit_price']).'</div>';
+                              echo '<div class="order-product-meta">Số lượng: '.$row1['quantity'].'</div>';
                                 echo '</div>';
                            }
                            ?>
@@ -562,7 +646,6 @@ foreach($all_admin_orders as $admin_order_row) {
                                 <div class="order-payment-method">Thanh toán khi nhận hàng (COD)</div>
                                 <div class="order-payment-detail"><b>Mã thanh toán:</b> <?php echo $row['payment_id']; ?></div>
                                 <div class="order-payment-detail"><b>Ngày:</b> <?php echo $row['payment_date']; ?></div>
-                                <div class="order-payment-detail"><b>Chi tiết:</b> Thanh toán khi nhận hàng</div>
                             <?php else: ?>
 								<div class="order-payment-method"><?php echo format_payment_method_vi($row['payment_method']); ?></div>
                                 <div class="order-payment-detail"><b>Mã thanh toán:</b> <?php echo $row['payment_id']; ?></div>
@@ -585,7 +668,7 @@ foreach($all_admin_orders as $admin_order_row) {
                         	<?php endif; ?>
                         </td>
                         <td><div class="order-payment-total"><?php echo format_price_vnd($row['paid_amount']); ?></div></td>
-                        <td>
+                        <td class="order-cell-status">
 							<?php
                                 $payment_status_badge_class = ($row['payment_status'] === 'Completed') ? 'status-badge--success' : 'status-badge--pending';
                             ?>
@@ -593,12 +676,12 @@ foreach($all_admin_orders as $admin_order_row) {
                             <?php
                                 if($row['payment_status']=='Pending' && $row['payment_method'] !== 'Cash On Delivery'){
                                     ?>
-                                <a href="order-change-status.php?id=<?php echo $row['id']; ?>&task=Completed" class="btn btn-success btn-xs" style="width:100%;margin-bottom:4px;">Đánh dấu đã thanh toán</a>
+                                <a href="order-change-status.php?id=<?php echo $row['id']; ?>&task=Completed" class="btn btn-success btn-sm btn-payment-complete">Đánh dấu đã thanh toán</a>
                                     <?php
                                 }
                             ?>
                         </td>
-                        <td>
+                        <td class="order-cell-status">
                             <?php
                                 $shipping_status_value = normalize_shipping_status_code($row['shipping_status']);
                                 $shipping_badge_class = 'status-badge--pending';
@@ -634,21 +717,21 @@ foreach($all_admin_orders as $admin_order_row) {
                                     <form action="order-shipping-status-update.php" method="post">
                                         <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                         <input type="hidden" name="shipping_status" value="<?php echo $next_shipping_status; ?>">
-                                        <button type="submit" class="btn btn-warning btn-xs"><?php echo $next_shipping_label; ?></button>
+                                        <button type="submit" class="btn btn-warning btn-sm"><?php echo $next_shipping_label; ?></button>
                                     </form>
                                 <?php endif; ?>
 
                                 <form action="order-shipping-status-update.php" method="post">
                                     <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                     <input type="hidden" name="shipping_status" value="Canceled">
-                                    <button type="submit" class="btn btn-default btn-xs">Hủy đơn</button>
+                                    <button type="submit" class="btn btn-default btn-sm">Hủy đơn</button>
                                 </form>
                                 </div>
                             <?php endif; ?>
                         </td>
 	                    <td class="order-actions">
-                            <a href="order-detail.php?id=<?php echo $row['id']; ?>" class="btn btn-xs btn-order-primary"><i class="fa fa-eye"></i><span>Xem chi tiết</span></a>
-                            <a href="#" class="btn btn-xs btn-order-danger-outline" data-href="order-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash"></i><span>Xóa</span></a>
+                            <a href="order-detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-order-primary"><i class="fa fa-eye"></i><span>Xem chi tiết</span></a>
+                            <a href="#" class="btn btn-sm btn-order-danger-outline" data-href="order-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash"></i><span>Xóa</span></a>
 	                    </td>
 	                </tr>
             		<?php

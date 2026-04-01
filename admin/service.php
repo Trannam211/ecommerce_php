@@ -9,6 +9,25 @@
 	</div>
 </section>
 
+<style>
+.service-actions {
+	white-space: nowrap;
+	text-align: center;
+}
+
+.service-actions .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 62px;
+	margin-right: 6px;
+}
+
+.service-actions .btn:last-child {
+	margin-right: 0;
+}
+</style>
+
 <section class="content">
 	<div class="row">
 		<div class="col-md-12">
@@ -21,7 +40,7 @@
 								<th>Hình ảnh</th>
 								<th width="100">Tiêu đề</th>
 								<th>Nội dung</th>
-								<th width="80">Thao tác</th>
+								<th width="150">Thao tác</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -38,9 +57,9 @@
 									<td style="width:130px;"><img src="../assets/uploads/<?php echo $row['photo']; ?>" alt="<?php echo $row['title']; ?>" style="width:120px;"></td>
 									<td><?php echo $row['title']; ?></td>
 									<td><?php echo $row['content']; ?></td>
-									<td>										
-										<a href="service-edit.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-xs">Sửa</a>
-										<a href="#" class="btn btn-danger btn-xs" data-href="service-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>  
+									<td class="service-actions">									
+										<a href="service-edit.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-sm">Sửa</a>
+										<a href="#" class="btn btn-danger btn-sm" data-href="service-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>  
 									</td>
 								</tr>
 								<?php

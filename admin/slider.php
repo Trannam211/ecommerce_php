@@ -20,7 +20,6 @@
 								<th>#</th>
 								<th>Hình ảnh</th>
 								<th>Tiêu đề</th>
-								<th>Content</th>
 								<th>Nội dung</th>
 								<th>Chữ trên nút</th>
 								<th>Liên kết nút</th>
@@ -56,7 +55,19 @@
 									<td><?php echo $row['content']; ?></td>
 									<td><?php echo $row['button_text']; ?></td>
 									<td><?php echo $row['button_url']; ?></td>
-									<td><?php echo ($row['position'] === 'Center') ? 'Giữa' : $row['position']; ?></td>
+									<td>
+										<?php
+										if($row['position'] === 'Left') {
+											echo 'Trái';
+										} elseif($row['position'] === 'Center') {
+											echo 'Giữa';
+										} elseif($row['position'] === 'Right') {
+											echo 'Phải';
+										} else {
+											echo $row['position'];
+										}
+										?>
+									</td>
 									<td>										
 										<a href="slider-edit.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-xs">Sửa</a>
 										<a href="#" class="btn btn-danger btn-xs" data-href="slider-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>  

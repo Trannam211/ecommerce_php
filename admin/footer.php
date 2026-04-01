@@ -3,7 +3,7 @@
 	</div>
 
 	<script src="js/jquery-2.2.4.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script src="js/bootstrap.min.js"></script>
 	<script src="js/bootstrap5-legacy-bridge.js"></script>
 	<script src="js/jquery.dataTables.min.js"></script>
 	<script src="js/dataTables.bootstrap.min.js"></script>
@@ -196,6 +196,134 @@
 
 	<script>
 	  $(function () {
+		function normalizeAdminFormRows() {
+			var isDesktop = window.matchMedia && window.matchMedia('(min-width: 992px)').matches;
+			var $groups = $('.content .form-horizontal .form-group');
+			$groups.removeClass('form-group-top');
+
+			if (!isDesktop) {
+				return;
+			}
+
+			$groups.each(function() {
+				var $group = $(this);
+				var hasTallControl = $group.find('textarea, input[type="file"], .note-editor, .existing-photo').length > 0;
+				if (hasTallControl) {
+					$group.addClass('form-group-top');
+				}
+			});
+		}
+
+		normalizeAdminFormRows();
+		$(window).on('resize', normalizeAdminFormRows);
+
+		function getDataTableLanguageVi() {
+			return {
+				processing: "Đang xử lý...",
+				search: "Lọc:",
+				lengthMenu: "Hiển thị _MENU_ mục",
+				info: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+				infoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+				infoFiltered: "(lọc từ _MAX_ mục)",
+				loadingRecords: "Đang tải...",
+				zeroRecords: "Không tìm thấy dữ liệu phù hợp",
+				emptyTable: "Không có dữ liệu",
+				paginate: {
+					first: "Đầu",
+					previous: "Trước",
+					next: "Sau",
+					last: "Cuối"
+				},
+				aria: {
+					sortAscending: ": sắp xếp tăng dần",
+					sortDescending: ": sắp xếp giảm dần"
+				}
+			};
+		}
+
+		function getOrInitDataTableVi(selector, options) {
+			if (!window.jQuery || !$.fn || !$.fn.DataTable) {
+				return null;
+			}
+			if (!$(selector).length) {
+				return null;
+			}
+			if ($.fn.DataTable.isDataTable(selector)) {
+				return $(selector).DataTable();
+			}
+			var language = getDataTableLanguageVi();
+			var config = $.extend(true, { language: language }, options || {});
+			return $(selector).DataTable(config);
+		}
+
+		function enhanceDataTableSearchControls() {
+			if (!window.jQuery || !$.fn || !$.fn.DataTable) {
+				return;
+			}
+
+			$('.dataTables_wrapper .dataTables_filter').each(function() {
+				var $filter = $(this);
+				if ($filter.attr('data-search-enhanced') === '1') {
+					return;
+				}
+
+				var $label = $filter.find('label').first();
+				var $input = $label.find('input[type="search"]').first();
+				if (!$label.length || !$input.length) {
+					return;
+				}
+
+				var labelText = $.trim($label.clone().children().remove().end().text());
+				if (labelText && labelText.toLowerCase().indexOf('tìm kiếm') !== -1) {
+					labelText = 'Lọc:';
+				}
+				if (!labelText) {
+					labelText = 'Lọc:';
+				}
+
+				var $box = $('<span class="dt-search-box"></span>');
+				$input.attr('placeholder', 'Nhập từ khóa');
+				$input.appendTo($box);
+
+				var $btn = $('<button type="button" class="btn-dt-search">Tìm kiếm</button>');
+				$box.append($btn);
+
+				$label.empty();
+				$label.append($('<span class="dt-search-text"></span>').text(labelText));
+				$label.append($box);
+
+				var $wrapper = $filter.closest('.dataTables_wrapper');
+				var $table = $wrapper.find('table.dataTable').first();
+				var dt = null;
+				if ($table.length && $.fn.DataTable.isDataTable($table[0])) {
+					dt = $table.DataTable();
+				}
+
+				var runSearch = function() {
+					var value = $input.val();
+					if (dt) {
+						dt.search(value).draw();
+					} else {
+						$input.trigger('keyup');
+					}
+				};
+
+				$btn.on('click', function(e) {
+					e.preventDefault();
+					runSearch();
+				});
+
+				$input.on('keydown', function(e) {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						runSearch();
+					}
+				});
+
+				$filter.attr('data-search-enhanced', '1');
+			});
+		}
+
 		// --- Confirm delete modal wiring (must be resilient) ---
 		var STORAGE_KEY = 'admin-delete-return-state';
 		function setReturnStateWithDataTable() {
@@ -204,13 +332,11 @@
 					path: window.location.pathname,
 					scrollY: window.scrollY || window.pageYOffset || 0
 				};
-				if (window.jQuery && $.fn && $.fn.DataTable && $('#example1').length) {
-					var dt = $('#example1').DataTable();
+				var dt = getOrInitDataTableVi('#example1');
 					if (dt) {
 						state.dtPage = dt.page();
 						state.dtLen = dt.page.len();
 					}
-				}
 				sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 			} catch (e) {
 				// ignore
@@ -233,8 +359,8 @@
 				if (state.path && state.path !== window.location.pathname) {
 					return;
 				}
-				if (window.jQuery && $.fn && $.fn.DataTable && $('#example1').length && typeof state.dtPage !== 'undefined') {
-					var dt = $('#example1').DataTable();
+				if (typeof state.dtPage !== 'undefined') {
+					var dt = getOrInitDataTableVi('#example1');
 					if (dt) {
 						if (state.dtLen) {
 							dt.page.len(state.dtLen);
@@ -347,15 +473,16 @@
 
 
 		if ($.fn.DataTable) {
-			$("#example1").DataTable();
-			$('#example2').DataTable({
-			  "paging": true,
-			  "lengthChange": false,
-			  "searching": false,
-			  "ordering": true,
-			  "info": true,
-			  "autoWidth": false
+			getOrInitDataTableVi('#example1');
+			getOrInitDataTableVi('#example2', {
+				"paging": true,
+				"lengthChange": false,
+				"searching": false,
+				"ordering": true,
+				"info": true,
+				"autoWidth": false
 			});
+			enhanceDataTableSearchControls();
 		}
 		
 		$('#confirm-approve').on('show.bs.modal', function(e) {
