@@ -11,13 +11,11 @@ foreach ($result as $row) {
 
 <?php
 if( !isset($_REQUEST['id']) || !isset($_REQUEST['type']) ) {
-    header('location: index.php');
-    exit;
+    safe_redirect('index.php');
 } else {
 
     if( ($_REQUEST['type'] != 'top-category') && ($_REQUEST['type'] != 'mid-category') && ($_REQUEST['type'] != 'end-category') ) {
-        header('location: index.php');
-        exit;
+        safe_redirect('index.php');
     } else {
 
         $statement = $pdo->prepare("SELECT * FROM tbl_top_category");
@@ -48,8 +46,7 @@ if( !isset($_REQUEST['id']) || !isset($_REQUEST['type']) ) {
 
         if($_REQUEST['type'] == 'top-category') {
             if(!in_array($_REQUEST['id'],$top)) {
-                header('location: index.php');
-                exit;
+                safe_redirect('index.php');
             } else {
 
                 // Getting Title
@@ -80,8 +77,7 @@ if( !isset($_REQUEST['id']) || !isset($_REQUEST['type']) ) {
 
         if($_REQUEST['type'] == 'mid-category') {
             if(!in_array($_REQUEST['id'],$mid)) {
-                header('location: index.php');
-                exit;
+                safe_redirect('index.php');
             } else {
                 // Getting Title
                 for ($i=0; $i < count($mid); $i++) { 
@@ -103,8 +99,7 @@ if( !isset($_REQUEST['id']) || !isset($_REQUEST['type']) ) {
 
         if($_REQUEST['type'] == 'end-category') {
             if(!in_array($_REQUEST['id'],$end)) {
-                header('location: index.php');
-                exit;
+                safe_redirect('index.php');
             } else {
                 // Getting Title
                 for ($i=0; $i < count($end); $i++) { 
@@ -127,6 +122,109 @@ if( !isset($_REQUEST['id']) || !isset($_REQUEST['type']) ) {
     </div>
 </div>
 
+<?php
+$pagination = '';
+$category_products = array();
+$total_products = 0;
+$limit = 12;
+$adjacents = 5;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if($page < 1) {
+    $page = 1;
+}
+
+$final_ecat_ids = array_map('intval', array_unique($final_ecat_ids));
+if(!empty($final_ecat_ids)) {
+    $placeholders = implode(',', array_fill(0, count($final_ecat_ids), '?'));
+    $query_params = array_merge(array(1), $final_ecat_ids);
+
+    $statement = $pdo->prepare("SELECT COUNT(*) FROM tbl_product WHERE p_is_active=? AND ecat_id IN ($placeholders)");
+    $statement->execute($query_params);
+    $total_products = (int)$statement->fetchColumn();
+
+    if($total_products > 0) {
+        $lastpage = (int)ceil($total_products / $limit);
+        if($page > $lastpage) {
+            $page = $lastpage;
+        }
+        $start = ($page - 1) * $limit;
+
+        $statement = $pdo->prepare("SELECT * FROM tbl_product WHERE p_is_active=? AND ecat_id IN ($placeholders) ORDER BY p_id DESC LIMIT $start, $limit");
+        $statement->execute($query_params);
+        $category_products = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if($lastpage > 1) {
+            $targetpage = BASE_URL.'product-category.php?id='.urlencode($_REQUEST['id']).'&type='.urlencode($_REQUEST['type']);
+            $prev = $page - 1;
+            $next = $page + 1;
+            $lpm1 = $lastpage - 1;
+
+            $pagination .= '<div class="pagination">';
+            if($page > 1) {
+                $pagination .= '<a href="'.$targetpage.'&page='.$prev.'">&#171; Trang trước</a>';
+            } else {
+                $pagination .= '<span class="disabled">&#171; Trang trước</span>';
+            }
+
+            if($lastpage < 7 + ($adjacents * 2)) {
+                for($counter = 1; $counter <= $lastpage; $counter++) {
+                    if($counter == $page) {
+                        $pagination .= '<span class="current">'.$counter.'</span>';
+                    } else {
+                        $pagination .= '<a href="'.$targetpage.'&page='.$counter.'">'.$counter.'</a>';
+                    }
+                }
+            } elseif($lastpage > 5 + ($adjacents * 2)) {
+                if($page < 1 + ($adjacents * 2)) {
+                    for($counter = 1; $counter < 4 + ($adjacents * 2); $counter++) {
+                        if($counter == $page) {
+                            $pagination .= '<span class="current">'.$counter.'</span>';
+                        } else {
+                            $pagination .= '<a href="'.$targetpage.'&page='.$counter.'">'.$counter.'</a>';
+                        }
+                    }
+                    $pagination .= '...';
+                    $pagination .= '<a href="'.$targetpage.'&page='.$lpm1.'">'.$lpm1.'</a>';
+                    $pagination .= '<a href="'.$targetpage.'&page='.$lastpage.'">'.$lastpage.'</a>';
+                } elseif($lastpage - ($adjacents * 2) > $page && $page > ($adjacents * 2)) {
+                    $pagination .= '<a href="'.$targetpage.'&page=1">1</a>';
+                    $pagination .= '<a href="'.$targetpage.'&page=2">2</a>';
+                    $pagination .= '...';
+                    for($counter = $page - $adjacents; $counter <= $page + $adjacents; $counter++) {
+                        if($counter == $page) {
+                            $pagination .= '<span class="current">'.$counter.'</span>';
+                        } else {
+                            $pagination .= '<a href="'.$targetpage.'&page='.$counter.'">'.$counter.'</a>';
+                        }
+                    }
+                    $pagination .= '...';
+                    $pagination .= '<a href="'.$targetpage.'&page='.$lpm1.'">'.$lpm1.'</a>';
+                    $pagination .= '<a href="'.$targetpage.'&page='.$lastpage.'">'.$lastpage.'</a>';
+                } else {
+                    $pagination .= '<a href="'.$targetpage.'&page=1">1</a>';
+                    $pagination .= '<a href="'.$targetpage.'&page=2">2</a>';
+                    $pagination .= '...';
+                    for($counter = $lastpage - (2 + ($adjacents * 2)); $counter <= $lastpage; $counter++) {
+                        if($counter == $page) {
+                            $pagination .= '<span class="current">'.$counter.'</span>';
+                        } else {
+                            $pagination .= '<a href="'.$targetpage.'&page='.$counter.'">'.$counter.'</a>';
+                        }
+                    }
+                }
+            }
+
+            if($page < $lastpage) {
+                $pagination .= '<a href="'.$targetpage.'&page='.$next.'">Trang sau &#187;</a>';
+            } else {
+                $pagination .= '<span class="disabled">Trang sau &#187;</span>';
+            }
+            $pagination .= '</div>';
+        }
+    }
+}
+?>
+
 <div class="page">
     <div class="container">
         <div class="row">
@@ -139,135 +237,121 @@ if( !isset($_REQUEST['id']) || !isset($_REQUEST['type']) ) {
 
                     <div class="row">
                         <?php
-                        // Checking if any product is available or not
-                        $prod_count = 0;
-                        $statement = $pdo->prepare("SELECT * FROM tbl_product");
-                        $statement->execute();
-                        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-                        foreach ($result as $row) {
-                            $prod_table_ecat_ids[] = $row['ecat_id'];
-                        }
-
-                        for($ii=0;$ii<count($final_ecat_ids);$ii++):
-                            if(in_array($final_ecat_ids[$ii],$prod_table_ecat_ids)) {
-                                $prod_count++;
-                            }
-                        endfor;
-
-                        if($prod_count==0) {
-                            echo '<div class="pl_15">'.LANG_VALUE_153.'</div>';
+                        if($total_products == 0) {
+                            echo '<div class="pl_15">Không tìm thấy sản phẩm</div>';
                         } else {
-                            for($ii=0;$ii<count($final_ecat_ids);$ii++) {
-                                $statement = $pdo->prepare("SELECT * FROM tbl_product WHERE ecat_id=? AND p_is_active=?");
-                                $statement->execute(array($final_ecat_ids[$ii],1));
-                                $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-                                foreach ($result as $row) {
-                                    ?>
-                                    <div class="col-md-4 item item-product-cat">
-                                        <div class="inner">
-                                            <div class="thumb">
-                                                <a class="product-link" href="<?php echo BASE_URL; ?>product.php?id=<?php echo $row['p_id']; ?>">
-                                                    <div class="photo" style="background-image:url(assets/uploads/<?php echo $row['p_featured_photo']; ?>);"></div>
-                                                    <div class="overlay"></div>
-                                                </a>
-                                            </div>
-                                            <div class="text">
-                                                <h3><a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $row['p_id']; ?>"><?php echo $row['p_name']; ?></a></h3>
-                                                <h4>
-                                                    <?php echo format_price_vnd($row['p_current_price']); ?>
-                                                    <?php if($row['p_old_price'] != ''): ?>
-                                                    <del>
-                                                        <?php echo format_price_vnd($row['p_old_price']); ?>
-                                                    </del>
-                                                    <?php endif; ?>
-                                                </h4>
-                                                <div class="rating">
-                                                    <?php
-                                                    $t_rating = 0;
-                                                    $statement1 = $pdo->prepare("SELECT * FROM tbl_rating WHERE p_id=?");
-                                                    $statement1->execute(array($row['p_id']));
-                                                    $tot_rating = $statement1->rowCount();
-                                                    if($tot_rating == 0) {
-                                                        $avg_rating = 0;
-                                                    } else {
-                                                        $result1 = $statement1->fetchAll(PDO::FETCH_ASSOC);
-                                                        foreach ($result1 as $row1) {
-                                                            $t_rating = $t_rating + $row1['rating'];
-                                                        }
-                                                        $avg_rating = $t_rating / $tot_rating;
-                                                    }
-                                                    ?>
-                                                    <?php
-                                                    if($avg_rating == 0) {
-                                                        echo '';
-                                                    }
-                                                    elseif($avg_rating == 1.5) {
-                                                        echo '
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star-half-o"></i>
-                                                            <i class="fa fa-star-o"></i>
-                                                            <i class="fa fa-star-o"></i>
-                                                            <i class="fa fa-star-o"></i>
-                                                        ';
-                                                    } 
-                                                    elseif($avg_rating == 2.5) {
-                                                        echo '
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star-half-o"></i>
-                                                            <i class="fa fa-star-o"></i>
-                                                            <i class="fa fa-star-o"></i>
-                                                        ';
-                                                    }
-                                                    elseif($avg_rating == 3.5) {
-                                                        echo '
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star-half-o"></i>
-                                                            <i class="fa fa-star-o"></i>
-                                                        ';
-                                                    }
-                                                    elseif($avg_rating == 4.5) {
-                                                        echo '
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star-half-o"></i>
-                                                        ';
-                                                    }
-                                                    else {
-                                                        for($i=1;$i<=5;$i++) {
-                                                            ?>
-                                                            <?php if($i>$avg_rating): ?>
-                                                                <i class="fa fa-star-o"></i>
-                                                            <?php else: ?>
-                                                                <i class="fa fa-star"></i>
-                                                            <?php endif; ?>
-                                                            <?php
-                                                        }
-                                                    }
-                                                    ?>
-                                                </div>
-                                                <?php if($row['p_qty'] == 0): ?>
-                                                    <div class="out-of-stock">
-                                                        <div class="inner">
-                                                            Hết hàng
-                                                        </div>
-                                                    </div>
-                                                <?php else: ?>
-                                                    <p><a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $row['p_id']; ?>"><i class="fa fa-shopping-cart"></i> Thêm vào giỏ</a></p>
+                            foreach ($category_products as $row) {
+                                ?>
+                                <div class="col-md-4 item item-product-cat">
+                                    <div class="inner">
+                                        <div class="thumb">
+                                            <a class="product-link" href="<?php echo BASE_URL; ?>product.php?id=<?php echo $row['p_id']; ?>">
+                                                <div class="photo" style="background-image:url(assets/uploads/<?php echo $row['p_featured_photo']; ?>);"></div>
+                                                <div class="overlay"></div>
+                                            </a>
+                                        </div>
+                                        <div class="text">
+                                            <h3><a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $row['p_id']; ?>"><?php echo $row['p_name']; ?></a></h3>
+                                            <h4>
+                                                <?php echo format_price_vnd($row['p_current_price']); ?>
+                                                <?php if($row['p_old_price'] != ''): ?>
+                                                <del>
+                                                    <?php echo format_price_vnd($row['p_old_price']); ?>
+                                                </del>
                                                 <?php endif; ?>
+                                            </h4>
+                                            <div class="rating">
+                                                <?php
+                                                $t_rating = 0;
+                                                $statement1 = $pdo->prepare("SELECT * FROM tbl_rating WHERE p_id=?");
+                                                $statement1->execute(array($row['p_id']));
+                                                $tot_rating = $statement1->rowCount();
+                                                if($tot_rating == 0) {
+                                                    $avg_rating = 0;
+                                                } else {
+                                                    $result1 = $statement1->fetchAll(PDO::FETCH_ASSOC);
+                                                    foreach ($result1 as $row1) {
+                                                        $t_rating = $t_rating + $row1['rating'];
+                                                    }
+                                                    $avg_rating = $t_rating / $tot_rating;
+                                                }
+                                                ?>
+                                                <?php
+                                                if($avg_rating == 0) {
+                                                    echo '';
+                                                }
+                                                elseif($avg_rating == 1.5) {
+                                                    echo '
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star-half-o"></i>
+                                                        <i class="fa fa-star-o"></i>
+                                                        <i class="fa fa-star-o"></i>
+                                                        <i class="fa fa-star-o"></i>
+                                                    ';
+                                                }
+                                                elseif($avg_rating == 2.5) {
+                                                    echo '
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star-half-o"></i>
+                                                        <i class="fa fa-star-o"></i>
+                                                        <i class="fa fa-star-o"></i>
+                                                    ';
+                                                }
+                                                elseif($avg_rating == 3.5) {
+                                                    echo '
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star-half-o"></i>
+                                                        <i class="fa fa-star-o"></i>
+                                                    ';
+                                                }
+                                                elseif($avg_rating == 4.5) {
+                                                    echo '
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star-half-o"></i>
+                                                    ';
+                                                }
+                                                else {
+                                                    for($i=1;$i<=5;$i++) {
+                                                        ?>
+                                                        <?php if($i>$avg_rating): ?>
+                                                            <i class="fa fa-star-o"></i>
+                                                        <?php else: ?>
+                                                            <i class="fa fa-star"></i>
+                                                        <?php endif; ?>
+                                                        <?php
+                                                    }
+                                                }
+                                                ?>
                                             </div>
+                                            <?php if($row['p_qty'] == 0): ?>
+                                                <div class="out-of-stock">
+                                                    <div class="inner">
+                                                        Hết hàng
+                                                    </div>
+                                                </div>
+                                            <?php else: ?>
+                                                <p><a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $row['p_id']; ?>"><i class="fa fa-shopping-cart"></i> Thêm vào giỏ hàng</a></p>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
-                                    <?php
-                                }
+                                </div>
+                                <?php
                             }
                         }
                         ?>
                     </div>
+
+                    <?php if($pagination != ''): ?>
+                    <div class="pagination" style="overflow:hidden;">
+                        <?php echo $pagination; ?>
+                    </div>
+                    <?php endif; ?>
 
                 </div>
 

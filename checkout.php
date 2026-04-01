@@ -6,13 +6,13 @@ $statement->execute();
 $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
 foreach ($result as $row) {
     $banner_checkout = $row['banner_checkout'];
+    $cod_on_off = isset($row['cod_on_off']) ? (int)$row['cod_on_off'] : 1;
 }
 ?>
 
 <?php
 if(!isset($_SESSION['cart_p_id'])) {
-    header('location: cart.php');
-    exit;
+    safe_redirect('cart.php');
 }
 
 $default_address = null;
@@ -519,7 +519,7 @@ if($selected_address) {
                                             </div>
                                         </div>
                                         <div class="checkout-product-price">
-                                            <span class="checkout-product-qty">SL: <?php echo $p_qty; ?></span>
+                                            <span class="checkout-product-qty">Số lượng: <?php echo $p_qty; ?></span>
                                             <span class="line"><?php echo format_price_vnd($p_price); ?> x <?php echo $p_qty; ?></span>
                                             <span class="total"><?php echo format_price_vnd($p_line_total); ?></span>
                                         </div>
@@ -555,7 +555,9 @@ if($selected_address) {
                                 <div class="form-group" style="margin-bottom:12px;">
                                     <select name="payment_method" class="form-control select2" id="advFieldsStatus">
                                         <option value="">Chọn phương thức thanh toán</option>
-                                        <option value="Cash On Delivery">Thanh toán khi nhận hàng</option>
+                                        <?php if((int)$cod_on_off === 1): ?>
+                                            <option value="Cash On Delivery">Thanh toán khi nhận hàng</option>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
 
@@ -569,10 +571,12 @@ if($selected_address) {
                                         <?php endif; ?>
                                     </div>
                                 <?php else: ?>
-                                    <form action="<?php echo BASE_URL; ?>payment/cod/init.php" method="post" id="cod_form" style="display:none;">
-                                        <input type="hidden" name="amount" value="<?php echo $final_total; ?>">
-                                        <input type="submit" class="btn checkout-place-btn" value="Đặt hàng" name="form_cod">
-                                    </form>
+                                    <?php if((int)$cod_on_off === 1): ?>
+                                        <form action="<?php echo BASE_URL; ?>payment/cod/init.php" method="post" id="cod_form" style="display:none;">
+                                            <input type="hidden" name="amount" value="<?php echo $final_total; ?>">
+                                            <input type="submit" class="btn checkout-place-btn" value="Đặt hàng" name="form_cod">
+                                        </form>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>

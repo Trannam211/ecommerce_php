@@ -19,7 +19,7 @@ if(!isset($_REQUEST['id'])) {
 
 <?php
 
-	// Delete from tbl_country
+	// Xóa from tbl_country
 	$statement = $pdo->prepare("DELETE FROM tbl_country WHERE country_id=?");
 	$statement->execute(array($_REQUEST['id']));
 

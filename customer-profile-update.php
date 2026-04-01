@@ -3,16 +3,14 @@
 <?php
 // Check if the customer is logged in or not
 if(!isset($_SESSION['customer'])) {
-    header('location: '.BASE_URL.'logout.php');
-    exit;
+    safe_redirect(BASE_URL.'logout.php');
 } else {
     // If customer is logged in, but admin make him inactive, then force logout this user.
     $statement = $pdo->prepare("SELECT * FROM tbl_customer WHERE cust_id=? AND cust_status=?");
     $statement->execute(array($_SESSION['customer']['cust_id'],0));
     $total = $statement->rowCount();
     if($total) {
-        header('location: '.BASE_URL.'logout.php');
-        exit;
+        safe_redirect(BASE_URL.'logout.php');
     }
 }
 ?>
@@ -236,7 +234,7 @@ if (isset($_POST['form1'])) {
                                 <input type="text" class="form-control" name="cust_name" value="<?php echo $_SESSION['customer']['cust_name']; ?>">
                             </div>
                             <div class="col-md-6 form-group">
-                                <label for="">Email *</label>
+                                <label for="">Địa chỉ email *</label>
                                 <input type="text" class="form-control" name="" value="<?php echo $_SESSION['customer']['cust_email']; ?>" disabled>
                             </div>
                             <div class="col-md-6 form-group">

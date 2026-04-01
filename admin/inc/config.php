@@ -1,4 +1,9 @@
 <?php
+if(ob_get_level() === 0) {
+	ob_start();
+}
+ob_implicit_flush(false);
+
 // Error Reporting Turn On
 ini_set('error_reporting', E_ALL);
 
@@ -14,7 +19,7 @@ $dbname = 'ecommerceweb';
 // Database Username
 $dbuser = 'root';
 
-// Database Password
+// Database Mật khẩu
 $dbpass = '';
 
 // Defining base url

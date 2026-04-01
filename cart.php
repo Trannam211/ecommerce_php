@@ -1,4 +1,7 @@
-<?php require_once('header.php'); ?>
+<?php
+ob_start();
+require_once('header.php');
+?>
 
 <?php
 $statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
@@ -30,6 +33,8 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
     }
 
     $stock_map = array();
+    $variant_stock_map = array();
+    $variant_table_exists = false;
     if(count($product_ids_for_stock) > 0) {
         $placeholders = implode(',', array_fill(0, count($product_ids_for_stock), '?'));
         $statement = $pdo->prepare("SELECT p_id, p_qty FROM tbl_product WHERE p_id IN ($placeholders)");
@@ -37,6 +42,19 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($result as $row) {
             $stock_map[(int)$row['p_id']] = (int)$row['p_qty'];
+        }
+
+        $statement = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
+        $statement->execute();
+        $variant_table_exists = $statement->rowCount() > 0;
+        if($variant_table_exists) {
+            $statement = $pdo->prepare("SELECT p_id, size_id, color_id, pv_qty FROM tbl_product_variant WHERE p_id IN ($placeholders)");
+            $statement->execute($product_ids_for_stock);
+            $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+            foreach($result as $row) {
+                $vkey = ((int)$row['p_id']).'_'.((int)$row['size_id']).'_'.((int)$row['color_id']);
+                $variant_stock_map[$vkey] = (int)$row['pv_qty'];
+            }
         }
     }
 
@@ -60,9 +78,17 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
             continue;
         }
 
-        if($stock_map[$product_id] < $requested_qty) {
+        $size_id = isset($_SESSION['cart_size_id'][$session_key]) ? (int)$_SESSION['cart_size_id'][$session_key] : 0;
+        $color_id = isset($_SESSION['cart_color_id'][$session_key]) ? (int)$_SESSION['cart_color_id'][$session_key] : 0;
+        $variant_key = $product_id.'_'.$size_id.'_'.$color_id;
+        $available_stock = isset($stock_map[$product_id]) ? (int)$stock_map[$product_id] : 0;
+        if($variant_table_exists && $size_id > 0 && $color_id > 0 && isset($variant_stock_map[$variant_key])) {
+            $available_stock = (int)$variant_stock_map[$variant_key];
+        }
+
+        if($available_stock < $requested_qty) {
             $allow_update = 0;
-            $error_message .= 'Sản phẩm "'.$product_name.'" chỉ còn "'.$stock_map[$product_id].'" sản phẩm trong kho.\n';
+            $error_message .= 'Sản phẩm "'.$product_name.'" chỉ còn "'.$available_stock.'" sản phẩm trong kho.\n';
         } else {
             $_SESSION['cart_p_qty'][$session_key] = $requested_qty;
         }
@@ -82,8 +108,7 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
     $error_message .= '\nSố lượng các sản phẩm khác đã được cập nhật thành công!';
 
     if($allow_update == 1 && isset($_POST['go_home'])) {
-        header('location: index.php');
-        exit;
+        safe_redirect('index.php');
     }
 
     if($allow_update == 1 && isset($_POST['go_checkout'])) {
@@ -94,13 +119,11 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
     }
 
     if($allow_update == 1 && isset($_POST['go_checkout'])) {
-        header('location: checkout.php');
-        exit;
+        safe_redirect('checkout.php');
     }
 
     if($allow_update == 1 && $is_auto_update) {
-        header('location: cart.php');
-        exit;
+        safe_redirect('cart.php');
     }
     ?>
 
@@ -117,7 +140,7 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
 <div class="page-banner" style="background-image: url(assets/uploads/<?php echo $banner_cart; ?>)">
     <div class="overlay"></div>
     <div class="page-banner-inner">
-        <h1><?php echo LANG_VALUE_18; ?></h1>
+        <h1>Giỏ hàng</h1>
     </div>
 </div>
 
@@ -359,7 +382,7 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
                     <div class="cart-head">
                         <div>Sản Phẩm</div>
                         <div class="text-center">Đơn Giá</div>
-                        <div class="text-center">Số Lượng</div>
+                        <div class="text-center">Số lượng</div>
                         <div class="text-center">Số Tiền</div>
                         <div class="text-center">Thao Tác</div>
                     </div>
@@ -410,7 +433,7 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
                 <div class="cart-buttons">
                     <ul>
                         <li><button type="submit" class="btn btn-primary" name="go_home">Tiếp tục mua sắm</button></li>
-                        <li><button type="submit" class="btn btn-primary" name="go_checkout"><?php echo LANG_VALUE_23; ?></button></li>
+                        <li><button type="submit" class="btn btn-primary" name="go_checkout">Tiến hành thanh toán</button></li>
                     </ul>
                 </div>
                 </form>

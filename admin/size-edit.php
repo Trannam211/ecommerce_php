@@ -6,9 +6,9 @@ if(isset($_POST['form1'])) {
 
     if(empty($_POST['size_name'])) {
         $valid = 0;
-        $error_message .= "Size Name can not be empty<br>";
+		$error_message .= "Tên kích cỡ không được để trống<br>";
     } else {
-		// Duplicate Size checking
+		// Duplicate Kích cỡ checking
     	// current size name that is in the database
     	$statement = $pdo->prepare("SELECT * FROM tbl_size WHERE size_id=?");
 		$statement->execute(array($_REQUEST['id']));
@@ -22,7 +22,7 @@ if(isset($_POST['form1'])) {
     	$total = $statement->rowCount();							
     	if($total) {
     		$valid = 0;
-        	$error_message .= 'Size name already exists<br>';
+        	$error_message .= 'Tên kích cỡ đã tồn tại<br>';
     	}
     }
 
@@ -31,7 +31,7 @@ if(isset($_POST['form1'])) {
 		$statement = $pdo->prepare("UPDATE tbl_size SET size_name=? WHERE size_id=?");
 		$statement->execute(array($_POST['size_name'],$_REQUEST['id']));
 
-    	$success_message = 'Size is updated successfully.';
+	    $success_message = 'Đã cập nhật kích cỡ thành công.';
     }
 }
 ?>
@@ -55,10 +55,10 @@ if(!isset($_REQUEST['id'])) {
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Edit Size</h1>
+		<h1>Sửa Kích cỡ</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="size.php" class="btn btn-primary btn-sm">View All</a>
+		<a href="size.php" class="btn btn-primary btn-sm">Xem danh sách</a>
 	</div>
 </section>
 
@@ -96,15 +96,15 @@ foreach ($result as $row) {
 
             <div class="box-body">
                 <div class="form-group">
-                    <label for="" class="col-sm-2 control-label">Size Name <span>*</span></label>
+					<label for="" class="col-sm-2 control-label">Tên kích cỡ <span>*</span></label>
                     <div class="col-sm-4">
                         <input type="text" class="form-control" name="size_name" value="<?php echo $size_name; ?>">
                     </div>
                 </div>
                 <div class="form-group">
                 	<label for="" class="col-sm-2 control-label"></label>
-                    <div class="col-sm-6">
-                      <button type="submit" class="btn btn-success pull-left" name="form1">Update</button>
+										<div class="col-sm-6" style="margin-top:12px;">
+                      <button type="submit" class="btn btn-success pull-left" name="form1">Cập nhật</button>
                     </div>
                 </div>
 
@@ -126,14 +126,14 @@ foreach ($result as $row) {
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Delete Confirmation</h4>
+				<h4 class="modal-title" id="myModalLabel">Xác nhận xóa</h4>
             </div>
             <div class="modal-body">
-                Are you sure want to delete this item?
+				Bạn có chắc chắn muốn xóa mục này không?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-danger btn-ok">Delete</a>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Hủy</button>
+                <a class="btn btn-danger btn-ok">Xóa</a>
             </div>
         </div>
     </div>

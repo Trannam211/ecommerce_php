@@ -6,10 +6,10 @@ if(isset($_POST['form1'])) {
 
     if(empty($_POST['color_name'])) {
         $valid = 0;
-        $error_message .= "Color Name can not be empty<br>";
+		$error_message .= "Tên màu sắc không được để trống<br>";
     } else {
-		// Duplicate Color checking
-    	// current Color name that is in the database
+		// Duplicate Màu sắc checking
+    	// current Màu sắc name that is in the database
     	$statement = $pdo->prepare("SELECT * FROM tbl_color WHERE color_id=?");
 		$statement->execute(array($_REQUEST['id']));
 		$result = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -22,7 +22,7 @@ if(isset($_POST['form1'])) {
     	$total = $statement->rowCount();							
     	if($total) {
     		$valid = 0;
-        	$error_message .= 'Color name already exists<br>';
+        	$error_message .= 'Tên màu sắc đã tồn tại<br>';
     	}
     }
 
@@ -31,7 +31,7 @@ if(isset($_POST['form1'])) {
 		$statement = $pdo->prepare("UPDATE tbl_color SET color_name=? WHERE color_id=?");
 		$statement->execute(array($_POST['color_name'],$_REQUEST['id']));
 
-    	$success_message = 'Color is updated successfully.';
+	    $success_message = 'Đã cập nhật màu sắc thành công.';
     }
 }
 ?>
@@ -55,10 +55,10 @@ if(!isset($_REQUEST['id'])) {
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Edit Color</h1>
+		<h1>Sửa Màu sắc</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="color.php" class="btn btn-primary btn-sm">View All</a>
+		<a href="color.php" class="btn btn-primary btn-sm">Xem danh sách</a>
 	</div>
 </section>
 
@@ -96,15 +96,15 @@ foreach ($result as $row) {
 
             <div class="box-body">
                 <div class="form-group">
-                    <label for="" class="col-sm-2 control-label">Color Name <span>*</span></label>
+					<label for="" class="col-sm-2 control-label">Tên màu sắc <span>*</span></label>
                     <div class="col-sm-4">
                         <input type="text" class="form-control" name="color_name" value="<?php echo $color_name; ?>">
                     </div>
                 </div>
                 <div class="form-group">
                 	<label for="" class="col-sm-2 control-label"></label>
-                    <div class="col-sm-6">
-                      <button type="submit" class="btn btn-success pull-left" name="form1">Update</button>
+					<div class="col-sm-6" style="margin-top:12px;">
+                      <button type="submit" class="btn btn-success pull-left" name="form1">Cập nhật</button>
                     </div>
                 </div>
 
@@ -126,14 +126,14 @@ foreach ($result as $row) {
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Delete Confirmation</h4>
+				<h4 class="modal-title" id="myModalLabel">Xác nhận xóa</h4>
             </div>
             <div class="modal-body">
-                Are you sure want to delete this item?
+				Bạn có chắc chắn muốn xóa mục này không?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-danger btn-ok">Delete</a>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Hủy</button>
+                <a class="btn btn-danger btn-ok">Xóa</a>
             </div>
         </div>
     </div>

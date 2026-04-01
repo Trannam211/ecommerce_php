@@ -1,11 +1,28 @@
 <?php
 ob_start();
 session_start();
-include("../../admin/inc/config.php");
+require_once __DIR__ . '/../../admin/inc/config.php';
+require_once __DIR__ . '/../../admin/inc/functions.php';
+
+$cod_on_off = 1;
+try {
+    $statement = $pdo->prepare("SELECT cod_on_off FROM tbl_settings WHERE id=1");
+    $statement->execute();
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+    if($row && isset($row['cod_on_off'])) {
+        $cod_on_off = (int)$row['cod_on_off'];
+    }
+} catch(PDOException $e) {
+    // Keep default ON for old databases missing cod_on_off.
+    $cod_on_off = 1;
+}
+
+if($cod_on_off !== 1) {
+    safe_redirect('../../checkout.php');
+}
 
 if(!isset($_POST['form_cod']) || !isset($_SESSION['customer']) || !isset($_SESSION['cart_p_id'])) {
-    header('location: ../../checkout.php');
-    exit;
+    safe_redirect('../../checkout.php');
 }
 
 $all_cart_keys = array_keys($_SESSION['cart_p_id']);
@@ -25,52 +42,103 @@ if(count($selected_cart_keys) === 0) {
 }
 
 if(count($selected_cart_keys) === 0) {
-    header('location: ../../cart.php');
-    exit;
+    safe_redirect('../../cart.php');
 }
 
 $payment_date = date('Y-m-d H:i:s');
 $payment_id = time();
 $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
+$order_total_amount = (int)round($amount);
+$paid_amount = 0;
 
-$statement = $pdo->prepare("INSERT INTO tbl_payment (
-                        customer_id,
-                        customer_name,
-                        customer_email,
-                        payment_date,
-                        txnid,
-                        paid_amount,
-                        card_number,
-                        card_cvv,
-                        card_month,
-                        card_year,
-                        bank_transaction_info,
-                        payment_method,
-                        payment_status,
-                        shipping_status,
-                        payment_id
-                    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-$statement->execute(array(
-                    $_SESSION['customer']['cust_id'],
-                    $_SESSION['customer']['cust_name'],
-                    $_SESSION['customer']['cust_email'],
-                    $payment_date,
-                    '',
-                    $amount,
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    'Cash On Delivery',
-                    'Pending',
-                    'Pending',
-                    $payment_id
-                ));
+$has_order_total_amount = false;
+try {
+    $statement = $pdo->prepare("SHOW COLUMNS FROM tbl_payment LIKE 'order_total_amount'");
+    $statement->execute();
+    $has_order_total_amount = $statement->rowCount() > 0;
+} catch(PDOException $e) {
+    $has_order_total_amount = false;
+}
+
+if($has_order_total_amount) {
+    $statement = $pdo->prepare("INSERT INTO tbl_payment (
+                            customer_id,
+                            customer_name,
+                            customer_email,
+                            payment_date,
+                            txnid,
+                            paid_amount,
+                            card_number,
+                            card_cvv,
+                            card_month,
+                            card_year,
+                            bank_transaction_info,
+                            payment_method,
+                            payment_status,
+                            shipping_status,
+                            payment_id,
+                            order_total_amount
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $statement->execute(array(
+                        $_SESSION['customer']['cust_id'],
+                        $_SESSION['customer']['cust_name'],
+                        $_SESSION['customer']['cust_email'],
+                        $payment_date,
+                        '',
+                        $paid_amount,
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        'Cash On Delivery',
+                        'Pending',
+                        'Pending',
+                        $payment_id,
+                        $order_total_amount
+                    ));
+} else {
+    $statement = $pdo->prepare("INSERT INTO tbl_payment (
+                            customer_id,
+                            customer_name,
+                            customer_email,
+                            payment_date,
+                            txnid,
+                            paid_amount,
+                            card_number,
+                            card_cvv,
+                            card_month,
+                            card_year,
+                            bank_transaction_info,
+                            payment_method,
+                            payment_status,
+                            shipping_status,
+                            payment_id
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $statement->execute(array(
+                        $_SESSION['customer']['cust_id'],
+                        $_SESSION['customer']['cust_name'],
+                        $_SESSION['customer']['cust_email'],
+                        $payment_date,
+                        '',
+                        $paid_amount,
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        'Cash On Delivery',
+                        'Pending',
+                        'Pending',
+                        $payment_id
+                    ));
+}
 
 $arr_cart_p_id = array();
 $arr_cart_p_name = array();
+$arr_cart_size_id = array();
 $arr_cart_size_name = array();
+$arr_cart_color_id = array();
 $arr_cart_color_name = array();
 $arr_cart_p_qty = array();
 $arr_cart_p_current_price = array();
@@ -80,10 +148,26 @@ foreach($selected_cart_keys as $key) {
     $i++;
     $arr_cart_p_id[$i] = $_SESSION['cart_p_id'][$key];
     $arr_cart_p_name[$i] = $_SESSION['cart_p_name'][$key];
+    $arr_cart_size_id[$i] = $_SESSION['cart_size_id'][$key];
     $arr_cart_size_name[$i] = $_SESSION['cart_size_name'][$key];
+    $arr_cart_color_id[$i] = $_SESSION['cart_color_id'][$key];
     $arr_cart_color_name[$i] = $_SESSION['cart_color_name'][$key];
     $arr_cart_p_qty[$i] = $_SESSION['cart_p_qty'][$key];
     $arr_cart_p_current_price[$i] = $_SESSION['cart_p_current_price'][$key];
+}
+
+$variant_table_exists = false;
+$variant_stock_map = array();
+$statement = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
+$statement->execute();
+$variant_table_exists = $statement->rowCount() > 0;
+if($variant_table_exists && count($arr_cart_p_id) > 0) {
+	$statement = $pdo->prepare("SELECT p_id, size_id, color_id, pv_qty FROM tbl_product_variant");
+	$statement->execute();
+	while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+		$key = ((int)$row['p_id']).'_'.((int)$row['size_id']).'_'.((int)$row['color_id']);
+		$variant_stock_map[$key] = (int)$row['pv_qty'];
+	}
 }
 
 $stock_map = array();
@@ -123,6 +207,23 @@ for($i=1;$i<=count($arr_cart_p_name);$i++) {
     $statement->execute(array($final_quantity, $arr_cart_p_id[$i]));
 
     $stock_map[(int)$arr_cart_p_id[$i]] = $final_quantity;
+
+    if($variant_table_exists) {
+        $v_p_id = (int)$arr_cart_p_id[$i];
+        $v_size_id = isset($arr_cart_size_id[$i]) ? (int)$arr_cart_size_id[$i] : 0;
+        $v_color_id = isset($arr_cart_color_id[$i]) ? (int)$arr_cart_color_id[$i] : 0;
+        if($v_size_id > 0 && $v_color_id > 0) {
+            $v_key = $v_p_id.'_'.$v_size_id.'_'.$v_color_id;
+            $current_variant_qty = isset($variant_stock_map[$v_key]) ? (int)$variant_stock_map[$v_key] : 0;
+            $next_variant_qty = $current_variant_qty - (int)$arr_cart_p_qty[$i];
+            if($next_variant_qty < 0) {
+                $next_variant_qty = 0;
+            }
+            $statement = $pdo->prepare("UPDATE tbl_product_variant SET pv_qty=? WHERE p_id=? AND size_id=? AND color_id=?");
+            $statement->execute(array($next_variant_qty, $v_p_id, $v_size_id, $v_color_id));
+            $variant_stock_map[$v_key] = $next_variant_qty;
+        }
+    }
 }
 
 $cart_fields = array(
@@ -159,5 +260,4 @@ foreach($cart_fields as $field) {
 
 unset($_SESSION['checkout_selected_item_keys']);
 
-header('location: ../../payment_success.php');
-exit;
+safe_redirect('../../payment_success.php');

@@ -2,12 +2,28 @@
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>View Colors</h1>
+		<h1>Danh sách màu sắc</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="color-add.php" class="btn btn-primary btn-sm">Add New</a>
+		<a href="color-add.php" class="btn btn-primary btn-sm">Thêm mới</a>
 	</div>
 </section>
+
+<style>
+.color-table td:last-child,
+.color-table th:last-child {
+	white-space: nowrap;
+	width: 140px;
+}
+
+.color-table .btn {
+	min-width: 44px;
+}
+
+.color-table .btn + .btn {
+	margin-left: 4px;
+}
+</style>
 
 
 <section class="content">
@@ -19,12 +35,12 @@
       <div class="box box-info">
         
         <div class="box-body table-responsive">
-          <table id="example1" class="table table-bordered table-hover table-striped">
+		  <table id="example1" class="table table-bordered table-hover table-striped color-table">
 			<thead>
 			    <tr>
 			        <th>#</th>
-			        <th>Color Name</th>
-			        <th>Action</th>
+			        <th>Tên màu sắc</th>
+			        <th>Thao tác</th>
 			    </tr>
 			</thead>
             <tbody>
@@ -40,8 +56,8 @@
 	                    <td><?php echo $i; ?></td>
 	                    <td><?php echo $row['color_name']; ?></td>
 	                    <td>
-	                        <a href="color-edit.php?id=<?php echo $row['color_id']; ?>" class="btn btn-primary btn-xs">Edit</a>
-	                        <a href="#" class="btn btn-danger btn-xs" data-href="color-delete.php?id=<?php echo $row['color_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Delete</a>
+	                        <a href="color-edit.php?id=<?php echo $row['color_id']; ?>" class="btn btn-primary btn-xs">Sửa</a>
+	                        <a href="#" class="btn btn-danger btn-xs" data-href="color-delete.php?id=<?php echo $row['color_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>
 	                    </td>
 	                </tr>
             		<?php
@@ -61,14 +77,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Delete Confirmation</h4>
+				<h4 class="modal-title" id="myModalLabel">Xác nhận xóa</h4>
             </div>
             <div class="modal-body">
-                Are you sure want to delete this item?
+				Bạn có chắc chắn muốn xóa mục này không?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-danger btn-ok">Delete</a>
+				<button type="button" class="btn btn-default" data-dismiss="modal">Hủy</button>
+                <a class="btn btn-danger btn-ok">Xóa</a>
             </div>
         </div>
     </div>

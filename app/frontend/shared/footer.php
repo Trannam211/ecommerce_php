@@ -11,11 +11,8 @@ foreach ($result as $row)
 	$footer_copyright = $row['footer_copyright'];
 	$total_recent_post_footer = $row['total_recent_post_footer'];
     $total_popular_post_footer = $row['total_popular_post_footer'];
-    $before_body = $row['before_body'];
 }
 ?>
-
-<?php echo $before_body; ?>
 
 
 <div class="footer-bottom">

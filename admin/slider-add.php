@@ -49,7 +49,7 @@ if(isset($_POST['form1'])) {
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Add Slider</h1>
+		<h1>Thêm Slider</h1>
 	</div>
 	<div class="content-header-right">
 		<a href="slider.php" class="btn btn-primary btn-sm">View All</a>
@@ -122,7 +122,7 @@ if(isset($_POST['form1'])) {
 						<div class="form-group">
 							<label for="" class="col-sm-2 control-label"></label>
 							<div class="col-sm-6">
-								<button type="submit" class="btn btn-success pull-left" name="form1">Submit</button>
+								<button type="submit" class="btn btn-success pull-left" name="form1">Gửi</button>
 							</div>
 						</div>
 					</div>

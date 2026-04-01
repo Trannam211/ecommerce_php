@@ -31,7 +31,7 @@ if(!isset($_REQUEST['id'])) {
 		unlink('../assets/uploads/'.$photo);	
 	}
 
-	// Delete from tbl_service
+	// Xóa from tbl_service
 	$statement = $pdo->prepare("DELETE FROM tbl_service WHERE id=?");
 	$statement->execute(array($_REQUEST['id']));
 

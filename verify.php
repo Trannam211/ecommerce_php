@@ -11,8 +11,7 @@ if ( (!isset($_REQUEST['email'])) || (isset($_REQUEST['token'])) )
     $result = $statement->fetchAll(PDO::FETCH_ASSOC);                           
     foreach ($result as $row) {
         if($_REQUEST['token'] != $row['cust_token']) {
-            header('location: '.BASE_URL);
-            exit;
+            safe_redirect(BASE_URL);
         }
     }
 

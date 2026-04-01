@@ -5,7 +5,7 @@
 		<h1>View Photos</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="photo-add.php" class="btn btn-primary btn-sm">Add New</a>
+		<a href="photo-add.php" class="btn btn-primary btn-sm">Thêm New</a>
 	</div>
 </section>
 
@@ -45,8 +45,8 @@
 	                    	<img src="../assets/uploads/<?php echo $row['photo']; ?>" width="140">
 	                    </td>
 	                    <td>
-	                        <a href="photo-edit.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-xs">Edit</a>
-	                        <a href="#" class="btn btn-danger btn-xs" data-href="photo-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete">Delete</a>
+	                        <a href="photo-edit.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-xs">Sửa</a>
+	                        <a href="#" class="btn btn-danger btn-xs" data-href="photo-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>
 	                    </td>
 	                </tr>
 	                <?php
@@ -65,14 +65,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Delete Confirmation</h4>
+                <h4 class="modal-title" id="myModalLabel">Xóa Confirmation</h4>
             </div>
             <div class="modal-body">
                 Are you sure want to delete this item?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-danger btn-ok">Delete</a>
+                <a class="btn btn-danger btn-ok">Xóa</a>
             </div>
         </div>
     </div>

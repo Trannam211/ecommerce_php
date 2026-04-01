@@ -6,18 +6,18 @@ if(isset($_POST['form1'])) {
     $valid = 1;
     if(empty($_POST['subject_text'])) {
         $valid = 0;
-        $error_message .= 'Subject can not be empty\n';
+        $error_message .= 'Tiêu đề không được để trống\n';
     }
     if(empty($_POST['message_text'])) {
         $valid = 0;
-        $error_message .= 'Subject can not be empty\n';
+        $error_message .= 'Nội dung không được để trống\n';
     }
     if($valid == 1) {
 
         $subject_text = strip_tags($_POST['subject_text']);
         $message_text = strip_tags($_POST['message_text']);
 
-        // Getting Customer Email Address
+        // Getting Customer Email Thêmress
         $statement = $pdo->prepare("SELECT * FROM tbl_customer WHERE cust_id=?");
         $statement->execute(array($_POST['cust_id']));
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
@@ -25,7 +25,7 @@ if(isset($_POST['form1'])) {
             $cust_email = $row['cust_email'];
         }
 
-        // Getting Admin Email Address
+        // Getting Admin Email Thêmress
         $statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
         $statement->execute();
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
@@ -42,30 +42,28 @@ if(isset($_POST['form1'])) {
             if($row['payment_method'] == 'Cash On Delivery'):
                 $payment_details = 'Thanh toán khi nhận hàng (COD)';
             elseif(!empty($row['bank_transaction_info'])):
-                $payment_details = 'Transaction Details: <br>'.$row['bank_transaction_info'];
-            elseif(!empty($row['txnid'])):
-                $payment_details = 'Transaction Id: '.$row['txnid'].'<br>';
+                $payment_details = 'Chi tiết giao dịch: <br>'.$row['bank_transaction_info'];
             elseif(!empty($row['card_number']) || !empty($row['card_cvv']) || !empty($row['card_month']) || !empty($row['card_year'])):
                 $payment_details = '
-Card number: '.$row['card_number'].'<br>
-Card CVV: '.$row['card_cvv'].'<br>
-Card Month: '.$row['card_month'].'<br>
-Card Year: '.$row['card_year'].'<br>
+Số thẻ: '.$row['card_number'].'<br>
+Mã CVV: '.$row['card_cvv'].'<br>
+Tháng hết hạn: '.$row['card_month'].'<br>
+Năm hết hạn: '.$row['card_year'].'<br>
                 ';
             else:
                 $payment_details = 'Phương thức thanh toán: '.$row['payment_method'];
         	endif;
 
             $order_detail .= '
-Customer Name: '.$row['customer_name'].'<br>
-Customer Email: '.$row['customer_email'].'<br>
-Payment Method: '.$row['payment_method'].'<br>
-Payment Date: '.$row['payment_date'].'<br>
-Payment Details: <br>'.$payment_details.'<br>
-Paid Amount: '.$row['paid_amount'].'<br>
-Payment Status: '.$row['payment_status'].'<br>
-Shipping Status: '.$row['shipping_status'].'<br>
-Payment Id: '.$row['payment_id'].'<br>
+Tên khách hàng: '.$row['customer_name'].'<br>
+Email khách hàng: '.$row['customer_email'].'<br>
+Phương thức thanh toán: '.format_payment_method_vi($row['payment_method']).'<br>
+Ngày thanh toán: '.$row['payment_date'].'<br>
+Chi tiết thanh toán: <br>'.$payment_details.'<br>
+Số tiền đã thanh toán: '.format_price_vnd($row['paid_amount']).'<br>
+Trạng thái thanh toán: '.format_payment_status_vi($row['payment_status']).'<br>
+Trạng thái giao hàng: '.format_shipping_status_vi($row['shipping_status']).'<br>
+Mã thanh toán: '.$row['payment_id'].'<br>
             ';
         }
 
@@ -76,12 +74,12 @@ Payment Id: '.$row['payment_id'].'<br>
         foreach ($result as $row) {
             $i++;
             $order_detail .= '
-<br><b><u>Product Item '.$i.'</u></b><br>
-Product Name: '.$row['product_name'].'<br>
-Size: '.$row['size'].'<br>
-Color: '.$row['color'].'<br>
-Quantity: '.$row['quantity'].'<br>
-Unit Price: '.$row['unit_price'].'<br>
+<br><b><u>Sản phẩm '.$i.'</u></b><br>
+Tên sản phẩm: '.$row['product_name'].'<br>
+Kích cỡ: '.$row['size'].'<br>
+Màu sắc: '.$row['color'].'<br>
+Số lượng: '.$row['quantity'].'<br>
+Đơn giá: '.format_price_vnd($row['unit_price']).'<br>
             ';
         }
 
@@ -92,9 +90,9 @@ Unit Price: '.$row['unit_price'].'<br>
         $to_customer = $cust_email;
         $message = '
 <html><body>
-<h3>Message: </h3>
+    <h3>Nội dung tin nhắn: </h3>
 '.$message_text.'
-<h3>Order Details: </h3>
+    <h3>Chi tiết đơn hàng: </h3>
 '.$order_detail.'
 </body></html>
 ';
@@ -102,12 +100,12 @@ Unit Price: '.$row['unit_price'].'<br>
                    'Reply-To: ' . $admin_email . "\r\n" .
                    'X-Mailer: PHP/' . phpversion() . "\r\n" . 
                    "MIME-Version: 1.0\r\n" . 
-                   "Content-Type: text/html; charset=ISO-8859-1\r\n";
+                   "Content-Type: text/html; charset=UTF-8\r\n";
 
         // Sending email to admin                  
         mail($to_customer, $subject_text, $message, $headers);
         
-        $success_message = 'Your email to customer is sent successfully.';
+        $success_message = 'Đã gửi email cho khách hàng thành công.';
 
     }
 }
@@ -119,11 +117,344 @@ if($error_message != '') {
 if($success_message != '') {
     echo "<script>alert('".$success_message."')</script>";
 }
+
+$admin_order_filter = isset($_GET['status']) ? trim((string)$_GET['status']) : 'all';
+$allowed_admin_filters = array('all', 'pending', 'shipping', 'completed', 'canceled');
+if(!in_array($admin_order_filter, $allowed_admin_filters, true)) {
+    $admin_order_filter = 'all';
+}
+
+$statement = $pdo->prepare("SELECT * FROM tbl_payment ORDER BY id DESC");
+$statement->execute();
+$all_admin_orders = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+$admin_order_counts = array(
+    'all' => count($all_admin_orders),
+    'pending' => 0,
+    'shipping' => 0,
+    'completed' => 0,
+    'canceled' => 0
+);
+$filtered_admin_orders = array();
+
+foreach($all_admin_orders as $admin_order_row) {
+    $status_code = normalize_shipping_status_code($admin_order_row['shipping_status']);
+    if($status_code === 'Pending') {
+        $admin_order_counts['pending']++;
+    } elseif($status_code === 'Shipping') {
+        $admin_order_counts['shipping']++;
+    } elseif($status_code === 'Completed') {
+        $admin_order_counts['completed']++;
+    } elseif($status_code === 'Canceled') {
+        $admin_order_counts['canceled']++;
+    }
+
+    if($admin_order_filter === 'all') {
+        $filtered_admin_orders[] = $admin_order_row;
+    } elseif($admin_order_filter === 'pending' && $status_code === 'Pending') {
+        $filtered_admin_orders[] = $admin_order_row;
+    } elseif($admin_order_filter === 'shipping' && $status_code === 'Shipping') {
+        $filtered_admin_orders[] = $admin_order_row;
+    } elseif($admin_order_filter === 'completed' && $status_code === 'Completed') {
+        $filtered_admin_orders[] = $admin_order_row;
+    } elseif($admin_order_filter === 'canceled' && $status_code === 'Canceled') {
+        $filtered_admin_orders[] = $admin_order_row;
+    }
+}
 ?>
+
+<style>
+.order-management-card {
+    border: 1px solid #d2d6de;
+    border-radius: 8px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.order-management-card .box-body {
+    padding: 18px 20px;
+}
+
+.order-filter-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.order-filter-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid #d2d6de;
+    color: #444;
+    background: #fff;
+    text-decoration: none;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.order-filter-nav a:hover {
+    background: #f4f4f4;
+    border-color: #c7ccd3;
+    color: #333;
+}
+
+.order-filter-nav a.active {
+    background: #3c8dbc;
+    border-color: #367fa9;
+    color: #fff;
+    box-shadow: none;
+}
+
+.order-filter-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3c8dbc;
+    background: #ecf5fb;
+}
+
+.order-filter-nav a.active .order-filter-count {
+    color: #3c8dbc;
+    background: #fff;
+}
+
+#example1 {
+    margin-bottom: 0;
+}
+
+#example1 thead th {
+    background: #f9fafc;
+    border-color: #dfe4ea;
+    color: #555;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 13px 12px;
+    white-space: nowrap;
+}
+
+#example1 tbody td {
+    border-color: #e6e9ee;
+    padding: 14px 12px;
+    vertical-align: top;
+}
+
+#example1 tbody tr.order-row {
+    transition: background-color 0.2s ease;
+}
+
+#example1 tbody tr.order-row:hover {
+    background: #f5f8fb;
+}
+
+.order-no {
+    font-weight: 700;
+    color: #333;
+}
+
+.order-customer-code {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+.order-customer-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.order-customer-email {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+    word-break: break-word;
+}
+
+.btn-message-customer {
+    width: 100%;
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+
+.order-product-item {
+    padding: 10px 0;
+    border-bottom: 1px dashed #dcdfe4;
+}
+
+.order-product-item:first-child {
+    padding-top: 0;
+}
+
+.order-product-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.order-product-name {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.order-product-meta {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.order-payment-method {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #3c8dbc;
+    background: #ecf5fb;
+    border: 1px solid #cfe2ef;
+    border-radius: 999px;
+    padding: 4px 10px;
+    margin-bottom: 8px;
+}
+
+.order-payment-detail {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 3px;
+    word-break: break-word;
+}
+
+.order-payment-total {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+}
+
+.status-badge--success {
+    color: #fff;
+    background: #00a65a;
+}
+
+.status-badge--warning {
+    color: #fff;
+    background: #f39c12;
+}
+
+.status-badge--danger {
+    color: #fff;
+    background: #dd4b39;
+}
+
+.status-badge--pending {
+    color: #fff;
+    background: #777;
+}
+
+.order-status-actions form {
+    margin: 0 0 6px;
+}
+
+.order-status-actions form:last-child {
+    margin-bottom: 0;
+}
+
+.order-status-actions .btn {
+    width: 100%;
+    border-radius: 6px;
+}
+
+.order-actions .btn {
+    width: 100%;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.order-actions .btn:last-child {
+    margin-bottom: 0;
+}
+
+.btn-order-primary {
+    color: #fff;
+    background: #3c8dbc;
+    border-color: #367fa9;
+}
+
+.btn-order-primary:hover,
+.btn-order-primary:focus {
+    color: #fff;
+    background: #367fa9;
+    border-color: #2f6f91;
+}
+
+.btn-order-danger-outline {
+    color: #dd4b39;
+    background: #fff;
+    border: 1px solid #dd4b39;
+}
+
+.btn-order-danger-outline:hover,
+.btn-order-danger-outline:focus {
+    color: #fff;
+    background: #dd4b39;
+    border-color: #c23321;
+}
+
+/* Disable rounded corners on this page */
+.order-management-card,
+.order-filter-nav a,
+.order-filter-count,
+.btn-message-customer,
+.order-payment-method,
+.status-badge,
+.order-status-actions .btn,
+.order-actions .btn,
+.btn-order-primary,
+.btn-order-danger-outline {
+    border-radius: 0 !important;
+}
+
+@media (max-width: 991px) {
+    .order-management-card .box-body {
+        padding: 14px;
+    }
+
+    #example1 tbody td {
+        padding: 12px 10px;
+    }
+}
+</style>
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>View Orders</h1>
+        <h1>Xem đơn hàng</h1>
 	</div>
 </section>
 
@@ -134,46 +465,52 @@ if($success_message != '') {
     <div class="col-md-12">
 
 
-      <div class="box box-info">
+          <div class="box box-info order-management-card">
+                <div class="box-body" style="padding-bottom:0;">
+                        <div class="order-filter-nav">
+                    <a href="order.php?status=all" class="<?php echo ($admin_order_filter === 'all') ? 'active' : ''; ?>"><span>Tất cả</span><span class="order-filter-count"><?php echo $admin_order_counts['all']; ?></span></a>
+                    <a href="order.php?status=pending" class="<?php echo ($admin_order_filter === 'pending') ? 'active' : ''; ?>"><span>Đơn mới</span><span class="order-filter-count"><?php echo $admin_order_counts['pending']; ?></span></a>
+                    <a href="order.php?status=shipping" class="<?php echo ($admin_order_filter === 'shipping') ? 'active' : ''; ?>"><span>Đang giao</span><span class="order-filter-count"><?php echo $admin_order_counts['shipping']; ?></span></a>
+                    <a href="order.php?status=completed" class="<?php echo ($admin_order_filter === 'completed') ? 'active' : ''; ?>"><span>Đã giao</span><span class="order-filter-count"><?php echo $admin_order_counts['completed']; ?></span></a>
+                    <a href="order.php?status=canceled" class="<?php echo ($admin_order_filter === 'canceled') ? 'active' : ''; ?>"><span>Đã hủy</span><span class="order-filter-count"><?php echo $admin_order_counts['canceled']; ?></span></a>
+                        </div>
+                </div>
         
         <div class="box-body table-responsive">
-          <table id="example1" class="table table-bordered table-hover table-striped">
+          <table id="example1" class="table table-bordered table-hover admin-order-table">
 			<thead>
 			    <tr>
 			        <th>#</th>
-                    <th>Customer</th>
-			        <th>Product Details</th>
+                    <th>Khách hàng</th>
+                    <th>Chi tiết sản phẩm</th>
                     <th>
-                    	Payment Information
+                        Thông tin thanh toán
                     </th>
-                    <th>Paid Amount</th>
-                    <th>Payment Status</th>
-                    <th>Shipping Status</th>
-			        <th>Action</th>
+                    <th>Số tiền đã thanh toán</th>
+                    <th>Trạng thái thanh toán</th>
+                    <th>Trạng thái giao hàng</th>
+                    <th>Thao tác</th>
 			    </tr>
 			</thead>
             <tbody>
             	<?php
-            	$i=0;
-            	$statement = $pdo->prepare("SELECT * FROM tbl_payment ORDER by id DESC");
-            	$statement->execute();
-            	$result = $statement->fetchAll(PDO::FETCH_ASSOC);							
-            	foreach ($result as $row) {
+                $i=0;
+                foreach ($filtered_admin_orders as $row) {
             		$i++;
             		?>
-					<tr class="<?php if($row['payment_status']=='Pending'){echo 'bg-r';}else{echo 'bg-g';} ?>">
-	                    <td><?php echo $i; ?></td>
+					<tr class="order-row">
+	                    <td><span class="order-no">#<?php echo $i; ?></span></td>
 	                    <td>
-                            <b>Id:</b> <?php echo $row['customer_id']; ?><br>
-                            <b>Name:</b><br> <?php echo $row['customer_name']; ?><br>
-                            <b>Email:</b><br> <?php echo $row['customer_email']; ?><br><br>
-                            <a href="#" data-toggle="modal" data-target="#model-<?php echo $i; ?>"class="btn btn-warning btn-xs" style="width:100%;margin-bottom:4px;">Send Message</a>
+                       <div class="order-customer-code">Mã KH: #<?php echo $row['customer_id']; ?></div>
+                       <div class="order-customer-name"><?php echo $row['customer_name']; ?></div>
+                       <div class="order-customer-email"><?php echo $row['customer_email']; ?></div>
+                       <a href="#" data-toggle="modal" data-target="#model-<?php echo $i; ?>" class="btn btn-warning btn-xs btn-message-customer"><i class="fa fa-envelope-o"></i> Gửi tin nhắn</a>
                             <div id="model-<?php echo $i; ?>" class="modal fade" role="dialog">
 								<div class="modal-dialog">
 									<div class="modal-content">
 										<div class="modal-header">
 											<button type="button" class="close" data-dismiss="modal">&times;</button>
-											<h4 class="modal-title" style="font-weight: bold;">Send Message</h4>
+                                            <h4 class="modal-title" style="font-weight: bold;">Gửi tin nhắn</h4>
 										</div>
 										<div class="modal-body" style="font-size: 14px">
 											<form action="" method="post">
@@ -181,26 +518,26 @@ if($success_message != '') {
                                                 <input type="hidden" name="payment_id" value="<?php echo $row['payment_id']; ?>">
 												<table class="table table-bordered">
 													<tr>
-														<td>Subject</td>
+                                                        <td>Tiêu đề</td>
 														<td>
                                                             <input type="text" name="subject_text" class="form-control" style="width: 100%;">
 														</td>
 													</tr>
                                                     <tr>
-                                                        <td>Message</td>
+                                                        <td>Nội dung</td>
                                                         <td>
                                                             <textarea name="message_text" class="form-control" cols="30" rows="10" style="width:100%;height: 200px;"></textarea>
                                                         </td>
                                                     </tr>
 													<tr>
 														<td></td>
-														<td><input type="submit" value="Send Message" name="form1"></td>
+                                                        <td><input type="submit" value="Gửi tin nhắn" name="form1"></td>
 													</tr>
 												</table>
 											</form>
 										</div>
 										<div class="modal-footer">
-											<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
 										</div>
 									</div>
 								</div>
@@ -212,72 +549,106 @@ if($success_message != '') {
                            $statement1->execute(array($row['payment_id']));
                            $result1 = $statement1->fetchAll(PDO::FETCH_ASSOC);
                            foreach ($result1 as $row1) {
-                                echo '<b>Product:</b> '.$row1['product_name'];
-                                echo '<br>(<b>Size:</b> '.$row1['size'];
-                                echo ', <b>Color:</b> '.$row1['color'].')';
-                                echo '<br>(<b>Quantity:</b> '.$row1['quantity'];
-                                echo ', <b>Unit Price:</b> '.$row1['unit_price'].')';
-                                echo '<br><br>';
+                                echo '<div class="order-product-item">';
+                                echo '<div class="order-product-name">'.$row1['product_name'].'</div>';
+                                echo '<div class="order-product-meta">Kích cỡ: '.$row1['size'].' | Màu sắc: '.$row1['color'].'</div>';
+                                echo '<div class="order-product-meta">Số lượng: '.$row1['quantity'].' | Đơn giá: '.format_price_vnd($row1['unit_price']).'</div>';
+                                echo '</div>';
                            }
                            ?>
                         </td>
                         <td>
                             	<?php if($row['payment_method'] == 'Cash On Delivery'): ?>
-                                <b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
-                                <b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
-                                <b>Date:</b> <?php echo $row['payment_date']; ?><br>
-                                <b>Payment Details:</b> Thanh toán khi nhận hàng<br>
+                                <div class="order-payment-method">Thanh toán khi nhận hàng (COD)</div>
+                                <div class="order-payment-detail"><b>Mã thanh toán:</b> <?php echo $row['payment_id']; ?></div>
+                                <div class="order-payment-detail"><b>Ngày:</b> <?php echo $row['payment_date']; ?></div>
+                                <div class="order-payment-detail"><b>Chi tiết:</b> Thanh toán khi nhận hàng</div>
                             <?php else: ?>
-                                <b>Payment Method:</b> <?php echo '<span style="color:red;"><b>'.$row['payment_method'].'</b></span>'; ?><br>
-                                <b>Payment Id:</b> <?php echo $row['payment_id']; ?><br>
-                                <b>Date:</b> <?php echo $row['payment_date']; ?><br>
-                            		<?php if(!empty($row['txnid'])): ?>
-                            			<b>Transaction Id:</b> <?php echo $row['txnid']; ?><br>
-                            		<?php endif; ?>
+								<div class="order-payment-method"><?php echo format_payment_method_vi($row['payment_method']); ?></div>
+                                <div class="order-payment-detail"><b>Mã thanh toán:</b> <?php echo $row['payment_id']; ?></div>
+                                <div class="order-payment-detail"><b>Ngày:</b> <?php echo $row['payment_date']; ?></div>
                             		<?php if(!empty($row['bank_transaction_info'])): ?>
-                            			<b>Transaction Information:</b> <br><?php echo $row['bank_transaction_info']; ?><br>
+                            			<div class="order-payment-detail"><b>Thông tin giao dịch:</b> <?php echo $row['bank_transaction_info']; ?></div>
                             		<?php endif; ?>
                             		<?php if(!empty($row['card_number'])): ?>
-                            			<b>Card Number:</b> <?php echo $row['card_number']; ?><br>
+                            			<div class="order-payment-detail"><b>Số thẻ:</b> <?php echo $row['card_number']; ?></div>
                             		<?php endif; ?>
                             		<?php if(!empty($row['card_cvv'])): ?>
-                            			<b>Card CVV:</b> <?php echo $row['card_cvv']; ?><br>
+                            			<div class="order-payment-detail"><b>Mã CVV:</b> <?php echo $row['card_cvv']; ?></div>
                             		<?php endif; ?>
                             		<?php if(!empty($row['card_month'])): ?>
-                            			<b>Expire Month:</b> <?php echo $row['card_month']; ?><br>
+                            			<div class="order-payment-detail"><b>Tháng hết hạn:</b> <?php echo $row['card_month']; ?></div>
                             		<?php endif; ?>
                             		<?php if(!empty($row['card_year'])): ?>
-                            			<b>Expire Year:</b> <?php echo $row['card_year']; ?><br>
+                            			<div class="order-payment-detail"><b>Năm hết hạn:</b> <?php echo $row['card_year']; ?></div>
                             		<?php endif; ?>
                         	<?php endif; ?>
                         </td>
-                        <td>$<?php echo $row['paid_amount']; ?></td>
+                        <td><div class="order-payment-total"><?php echo format_price_vnd($row['paid_amount']); ?></div></td>
                         <td>
-                            <?php echo $row['payment_status']; ?>
-                            <br><br>
+							<?php
+                                $payment_status_badge_class = ($row['payment_status'] === 'Completed') ? 'status-badge--success' : 'status-badge--pending';
+                            ?>
+                            <div class="status-badge <?php echo $payment_status_badge_class; ?>"><?php echo format_payment_status_vi($row['payment_status']); ?></div>
                             <?php
-                                if($row['payment_status']=='Pending'){
+                                if($row['payment_status']=='Pending' && $row['payment_method'] !== 'Cash On Delivery'){
                                     ?>
-                                    <a href="order-change-status.php?id=<?php echo $row['id']; ?>&task=Completed" class="btn btn-success btn-xs" style="width:100%;margin-bottom:4px;">Mark Complete</a>
+                                <a href="order-change-status.php?id=<?php echo $row['id']; ?>&task=Completed" class="btn btn-success btn-xs" style="width:100%;margin-bottom:4px;">Đánh dấu đã thanh toán</a>
                                     <?php
                                 }
                             ?>
                         </td>
                         <td>
-                            <?php echo $row['shipping_status']; ?>
-                            <br><br>
                             <?php
-                            if($row['payment_status']=='Completed') {
-                                if($row['shipping_status']=='Pending'){
-                                    ?>
-                                    <a href="shipping-change-status.php?id=<?php echo $row['id']; ?>&task=Completed" class="btn btn-warning btn-xs" style="width:100%;margin-bottom:4px;">Mark Complete</a>
-                                    <?php
+                                $shipping_status_value = normalize_shipping_status_code($row['shipping_status']);
+                                $shipping_badge_class = 'status-badge--pending';
+                                $shipping_status_label = 'Đơn mới';
+                                if($shipping_status_value === 'Shipping') {
+                                    $shipping_badge_class = 'status-badge--warning';
+                                    $shipping_status_label = 'Đang giao';
+                                } elseif($shipping_status_value === 'Completed') {
+                                    $shipping_badge_class = 'status-badge--success';
+                                    $shipping_status_label = 'Đã giao';
+                                } elseif($shipping_status_value === 'Canceled') {
+                                    $shipping_badge_class = 'status-badge--danger';
+                                    $shipping_status_label = 'Đã hủy';
                                 }
-                            }
                             ?>
+                            <div class="status-badge <?php echo $shipping_badge_class; ?>"><?php echo $shipping_status_label; ?></div>
+
+                            <?php if($shipping_status_value !== 'Completed' && $shipping_status_value !== 'Canceled'): ?>
+                                <?php
+                                    $next_shipping_status = '';
+                                    $next_shipping_label = '';
+                                    if($shipping_status_value === 'Pending') {
+                                        $next_shipping_status = 'Shipping';
+                                        $next_shipping_label = 'Bắt đầu giao';
+                                    } elseif($shipping_status_value === 'Shipping') {
+                                        $next_shipping_status = 'Completed';
+                                        $next_shipping_label = 'Đánh dấu đã giao';
+                                    }
+                                ?>
+
+                                <div class="order-status-actions">
+                                <?php if($next_shipping_status !== ''): ?>
+                                    <form action="order-shipping-status-update.php" method="post">
+                                        <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                        <input type="hidden" name="shipping_status" value="<?php echo $next_shipping_status; ?>">
+                                        <button type="submit" class="btn btn-warning btn-xs"><?php echo $next_shipping_label; ?></button>
+                                    </form>
+                                <?php endif; ?>
+
+                                <form action="order-shipping-status-update.php" method="post">
+                                    <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                    <input type="hidden" name="shipping_status" value="Canceled">
+                                    <button type="submit" class="btn btn-default btn-xs">Hủy đơn</button>
+                                </form>
+                                </div>
+                            <?php endif; ?>
                         </td>
-	                    <td>
-                            <a href="#" class="btn btn-danger btn-xs" data-href="order-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete" style="width:100%;">Delete</a>
+	                    <td class="order-actions">
+                            <a href="order-detail.php?id=<?php echo $row['id']; ?>" class="btn btn-xs btn-order-primary"><i class="fa fa-eye"></i><span>Xem chi tiết</span></a>
+                            <a href="#" class="btn btn-xs btn-order-danger-outline" data-href="order-delete.php?id=<?php echo $row['id']; ?>" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash"></i><span>Xóa</span></a>
 	                    </td>
 	                </tr>
             		<?php
@@ -297,14 +668,14 @@ if($success_message != '') {
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Delete Confirmation</h4>
+                <h4 class="modal-title" id="myModalLabel">Xác nhận xóa</h4>
             </div>
             <div class="modal-body">
-                Sure you want to delete this item?
+                Bạn có chắc chắn muốn xóa mục này không?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-danger btn-ok">Delete</a>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Hủy</button>
+                <a class="btn btn-danger btn-ok">Xóa</a>
             </div>
         </div>
     </div>

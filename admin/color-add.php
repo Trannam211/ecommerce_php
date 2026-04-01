@@ -6,7 +6,7 @@ if(isset($_POST['form1'])) {
 
     if(empty($_POST['color_name'])) {
         $valid = 0;
-        $error_message .= "Color Name can not be empty<br>";
+		$error_message .= "Tên màu sắc không được để trống<br>";
     } else {
     	// Duplicate Category checking
     	$statement = $pdo->prepare("SELECT * FROM tbl_color WHERE color_name=?");
@@ -15,7 +15,7 @@ if(isset($_POST['form1'])) {
     	if($total)
     	{
     		$valid = 0;
-        	$error_message .= "Color Name already exists<br>";
+        	$error_message .= "Tên màu sắc đã tồn tại<br>";
     	}
     }
 
@@ -25,17 +25,17 @@ if(isset($_POST['form1'])) {
 		$statement = $pdo->prepare("INSERT INTO tbl_color (color_name) VALUES (?)");
 		$statement->execute(array($_POST['color_name']));
 	
-    	$success_message = 'Color is added successfully.';
+	    $success_message = 'Đã thêm màu sắc thành công.';
     }
 }
 ?>
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Add Color</h1>
+		<h1>Thêm Màu sắc</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="color.php" class="btn btn-primary btn-sm">View All</a>
+		<a href="color.php" class="btn btn-primary btn-sm">Xem danh sách</a>
 	</div>
 </section>
 
@@ -66,15 +66,15 @@ if(isset($_POST['form1'])) {
 				<div class="box box-info">
 					<div class="box-body">
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Color Name <span>*</span></label>
+							<label for="" class="col-sm-2 control-label">Tên màu sắc <span>*</span></label>
 							<div class="col-sm-4">
 								<input type="text" class="form-control" name="color_name">
 							</div>
 						</div>
 						<div class="form-group">
 							<label for="" class="col-sm-2 control-label"></label>
-							<div class="col-sm-6">
-								<button type="submit" class="btn btn-success pull-left" name="form1">Submit</button>
+							<div class="col-sm-6" style="margin-top:12px;">
+								<button type="submit" class="btn btn-success pull-left" name="form1">Gửi</button>
 							</div>
 						</div>
 					</div>

@@ -58,7 +58,7 @@ if (isset($_POST['form1'])) {
             $total = $statement->rowCount();
             if($total) {
                 $valid = 0;
-                $error_message .= "Email này đã được đăng ký trước đó.<br>";
+                $error_message .= "Địa chỉ email này đã được đăng ký trước đó.<br>";
             }
         }
     }
@@ -340,14 +340,14 @@ if (isset($_POST['form1'])) {
                             }
                             ?>
 
-                            <div class="register-section-title">Thông Tin Cá Nhân</div>
+                            <div class="register-section-title">Thông tin cá nhân</div>
                             <div class="row">
                                 <div class="col-md-6 form-group">
                                     <label for="">Họ và tên *</label>
                                     <input type="text" class="form-control" name="cust_name" placeholder="Nhập họ và tên" value="<?php if(isset($_POST['cust_name'])){echo $_POST['cust_name'];} ?>" title="Họ và tên phải có ít nhất 1 khoảng trắng và không chứa số, ký tự đặc biệt.">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for="">Email *</label>
+                                    <label for="">Địa chỉ email *</label>
                                     <input type="email" class="form-control" name="cust_email" placeholder="Nhập địa chỉ email" value="<?php if(isset($_POST['cust_email'])){echo $_POST['cust_email'];} ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
@@ -357,7 +357,7 @@ if (isset($_POST['form1'])) {
                             </div>
 
                             <hr class="register-divider">
-                            <div class="register-section-title">Địa Chỉ Liên Hệ</div>
+                            <div class="register-section-title">Địa chỉ liên hệ</div>
                             <div class="row">
                                 <div class="col-md-4 form-group">
                                     <label for="">Tỉnh/Thành phố *</label>
@@ -389,7 +389,7 @@ if (isset($_POST['form1'])) {
                             </div>
 
                             <hr class="register-divider">
-                            <div class="register-section-title">Bảo Mật Tài Khoản</div>
+                            <div class="register-section-title">Bảo mật tài khoản</div>
                             <div class="row">
                                 <div class="col-md-6 form-group">
                                     <label for="">Mật khẩu *</label>

@@ -1,18 +1,21 @@
 <?php
-include("app/frontend/shared/lang_vi.php");
-ob_start('vn_frontend_translate');
-session_start();
-include("admin/inc/config.php");
-include("admin/inc/functions.php");
-include("admin/inc/CSRF_Protect.php");
+if(ob_get_level() === 0) {
+	ob_start();
+}
+
+// Ensure output buffering is effective for redirects.
+ob_implicit_flush(false);
+if(session_status() !== PHP_SESSION_ACTIVE) {
+	session_start();
+}
+require_once(__DIR__ . '/../../../admin/inc/config.php');
+require_once(__DIR__ . '/../../../admin/inc/functions.php');
+require_once(__DIR__ . '/../../../admin/inc/CSRF_Protect.php');
 $csrf = new CSRF_Protect();
 $error_message = '';
 $success_message = '';
 $error_message1 = '';
 $success_message1 = '';
-
-// Load static Vietnamese language constants from code (no database dependency)
-vn_load_frontend_language_constants();
 
 $statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
 $statement->execute();
@@ -26,8 +29,6 @@ foreach ($result as $row)
 	$meta_title_home = $row['meta_title_home'];
     $meta_keyword_home = $row['meta_keyword_home'];
     $meta_description_home = $row['meta_description_home'];
-    $before_head = $row['before_head'];
-    $after_body = $row['after_body'];
 }
 
 // Checking the order table and removing the pending transaction that are 24 hours+ old. Very important
@@ -41,6 +42,10 @@ foreach ($result as $row) {
 	$diff = $ts2 - $ts1;
 	$time = $diff/(3600);
 	if($time>24) {
+		$variant_table_exists = false;
+		$statement_check_variant = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
+		$statement_check_variant->execute();
+		$variant_table_exists = $statement_check_variant->rowCount() > 0;
 
 		// Return back the stock amount
 		$statement1 = $pdo->prepare("SELECT * FROM tbl_order WHERE payment_id=?");
@@ -57,6 +62,38 @@ foreach ($result as $row) {
 
 			$statement = $pdo->prepare("UPDATE tbl_product SET p_qty=? WHERE p_id=?");
 			$statement->execute(array($final,$row1['product_id']));
+
+			if($variant_table_exists) {
+				$restore_size_id = 0;
+				$restore_color_id = 0;
+				if(isset($row1['size']) && trim((string)$row1['size']) !== '') {
+					$statement_size = $pdo->prepare("SELECT size_id FROM tbl_size WHERE size_name=? LIMIT 1");
+					$statement_size->execute(array($row1['size']));
+					$size_row = $statement_size->fetch(PDO::FETCH_ASSOC);
+					if($size_row) {
+						$restore_size_id = (int)$size_row['size_id'];
+					}
+				}
+				if(isset($row1['color']) && trim((string)$row1['color']) !== '') {
+					$statement_color = $pdo->prepare("SELECT color_id FROM tbl_color WHERE color_name=? LIMIT 1");
+					$statement_color->execute(array($row1['color']));
+					$color_row = $statement_color->fetch(PDO::FETCH_ASSOC);
+					if($color_row) {
+						$restore_color_id = (int)$color_row['color_id'];
+					}
+				}
+
+				if($restore_size_id > 0 && $restore_color_id > 0) {
+					$statement_variant = $pdo->prepare("SELECT pv_qty FROM tbl_product_variant WHERE p_id=? AND size_id=? AND color_id=? LIMIT 1");
+					$statement_variant->execute(array($row1['product_id'], $restore_size_id, $restore_color_id));
+					$variant_row = $statement_variant->fetch(PDO::FETCH_ASSOC);
+					if($variant_row) {
+						$next_variant_qty = (int)$variant_row['pv_qty'] + (int)$row1['quantity'];
+						$statement_variant_update = $pdo->prepare("UPDATE tbl_product_variant SET pv_qty=? WHERE p_id=? AND size_id=? AND color_id=?");
+						$statement_variant_update->execute(array($next_variant_qty, $row1['product_id'], $restore_size_id, $restore_color_id));
+					}
+				}
+			}
 		}
 		
 		// Deleting data from table
@@ -212,13 +249,8 @@ foreach ($result as $row) {
 	<?php endif; ?>
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
-
-<?php echo $before_head; ?>
-
 </head>
 <body>
-
-<?php echo $after_body; ?>
 <!--
 <div id="preloader">
 	<div id="status"></div>

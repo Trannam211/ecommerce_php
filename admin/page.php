@@ -8,12 +8,12 @@ if(isset($_POST['form_about'])) {
 
     if(empty($_POST['about_title'])) {
         $valid = 0;
-        $error_message .= 'Title can not be empty<br>';
+        $error_message .= 'Tiêu đề không được để trống<br>';
     }
 
     if(empty($_POST['about_content'])) {
         $valid = 0;
-        $error_message .= 'Content can not be empty<br>';
+        $error_message .= 'Nội dung không được để trống<br>';
     }
 
     $path = $_FILES['about_banner']['name'];
@@ -24,7 +24,7 @@ if(isset($_POST['form_about'])) {
         $file_name = basename( $path, '.' . $ext );
         if( $ext!='jpg' && $ext!='png' && $ext!='jpeg' && $ext!='gif' ) {
             $valid = 0;
-            $error_message .= 'You must have to upload jpg, jpeg, gif or png file<br>';
+            $error_message .= 'Bạn phải tải lên tệp jpg, jpeg, gif hoặc png<br>';
         }
     }
 
@@ -53,7 +53,7 @@ if(isset($_POST['form_about'])) {
             $statement->execute(array($_POST['about_title'],$_POST['about_content'],$_POST['about_meta_title'],$_POST['about_meta_keyword'],$_POST['about_meta_description']));
         }
 
-        $success_message = 'About Page Information is updated successfully.';
+        $success_message = 'Đã cập nhật thông tin trang Giới thiệu thành công.';
         
     }
     
@@ -66,7 +66,7 @@ if(isset($_POST['form_contact'])) {
 
     if(empty($_POST['contact_title'])) {
         $valid = 0;
-        $error_message .= 'Title can not be empty<br>';
+        $error_message .= 'Tiêu đề không được để trống<br>';
     }
 
     $path = $_FILES['contact_banner']['name'];
@@ -77,7 +77,7 @@ if(isset($_POST['form_contact'])) {
         $file_name = basename( $path, '.' . $ext );
         if( $ext!='jpg' && $ext!='png' && $ext!='jpeg' && $ext!='gif' ) {
             $valid = 0;
-            $error_message .= 'You must have to upload jpg, jpeg, gif or png file<br>';
+            $error_message .= 'Bạn phải tải lên tệp jpg, jpeg, gif hoặc png<br>';
         }
     }
 
@@ -106,7 +106,7 @@ if(isset($_POST['form_contact'])) {
             $statement->execute(array($_POST['contact_title'],$_POST['contact_meta_title'],$_POST['contact_meta_keyword'],$_POST['contact_meta_description']));
         }
 
-        $success_message = 'Contact Page Information is updated successfully.';
+        $success_message = 'Đã cập nhật thông tin trang Liên hệ thành công.';
         
     }
     
@@ -117,7 +117,7 @@ if(isset($_POST['form_contact'])) {
 
 <section class="content-header">
     <div class="content-header-left">
-        <h1>Page Settings</h1>
+        <h1>Cài đặt trang</h1>
     </div>
 </section>
 
@@ -171,8 +171,8 @@ foreach ($result as $row) {
                             
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tab_1" data-toggle="tab">About Us</a></li>
-                        <li><a href="#tab_4" data-toggle="tab">Contact</a></li>
+                        <li class="active"><a href="#tab_1" data-toggle="tab">Giới thiệu</a></li>
+                        <li><a href="#tab_4" data-toggle="tab">Liên hệ</a></li>
 
                     </ul>
 
@@ -184,43 +184,43 @@ foreach ($result as $row) {
                             <div class="box box-info">
                                 <div class="box-body">
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Page Title * </label>
+                                        <label for="" class="col-sm-3 control-label">Tiêu đề trang * </label>
                                         <div class="col-sm-5">
                                             <input class="form-control" type="text" name="about_title" value="<?php echo $about_title; ?>">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Page Content * </label>
+                                        <label for="" class="col-sm-3 control-label">Nội dung trang * </label>
                                         <div class="col-sm-8">
                                             <textarea class="form-control" name="about_content" id="editor1"><?php echo $about_content; ?></textarea>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Existing Banner Photo</label>
+                                        <label for="" class="col-sm-3 control-label">Ảnh banner hiện tại</label>
                                         <div class="col-sm-6" style="padding-top:6px;">
                                             <img src="../assets/uploads/<?php echo $about_banner; ?>" class="existing-photo" style="height:80px;">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">New Banner Photo</label>
+                                        <label for="" class="col-sm-3 control-label">Ảnh banner mới</label>
                                         <div class="col-sm-6" style="padding-top:6px;">
                                             <input type="file" name="about_banner">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Meta Title</label>
+                                        <label for="" class="col-sm-3 control-label">Tiêu đề Meta</label>
                                         <div class="col-sm-8">
                                             <input class="form-control" type="text" name="about_meta_title" value="<?php echo $about_meta_title; ?>">
                                         </div>
                                     </div>             
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Meta Keyword </label>
+                                        <label for="" class="col-sm-3 control-label">Từ khóa Meta </label>
                                         <div class="col-sm-8">
                                             <textarea class="form-control" name="about_meta_keyword" style="height:100px;"><?php echo $about_meta_keyword; ?></textarea>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Meta Description </label>
+                                        <label for="" class="col-sm-3 control-label">Mô tả Meta </label>
                                         <div class="col-sm-8">
                                             <textarea class="form-control" name="about_meta_description" style="height:100px;"><?php echo $about_meta_description; ?></textarea>
                                         </div>
@@ -228,7 +228,7 @@ foreach ($result as $row) {
                                     <div class="form-group">
                                         <label for="" class="col-sm-3 control-label"></label>
                                         <div class="col-sm-6">
-                                            <button type="submit" class="btn btn-success pull-left" name="form_about">Update</button>
+                                            <button type="submit" class="btn btn-success pull-left" name="form_about">Cập nhật</button>
                                         </div>
                                     </div>
                                 </div>
@@ -241,37 +241,37 @@ foreach ($result as $row) {
                             <div class="box box-info">
                                 <div class="box-body">
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Page Title * </label>
+                                        <label for="" class="col-sm-3 control-label">Tiêu đề trang * </label>
                                         <div class="col-sm-5">
                                             <input class="form-control" type="text" name="contact_title" value="<?php echo $contact_title; ?>">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Existing Banner Photo</label>
+                                        <label for="" class="col-sm-3 control-label">Ảnh banner hiện tại</label>
                                         <div class="col-sm-6" style="padding-top:6px;">
                                             <img src="../assets/uploads/<?php echo $contact_banner; ?>" class="existing-photo" style="height:80px;">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">New Banner Photo</label>
+                                        <label for="" class="col-sm-3 control-label">Ảnh banner mới</label>
                                         <div class="col-sm-6" style="padding-top:6px;">
                                             <input type="file" name="contact_banner">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Meta Title</label>
+                                        <label for="" class="col-sm-3 control-label">Tiêu đề Meta</label>
                                         <div class="col-sm-8">
                                             <input class="form-control" type="text" name="contact_meta_title" value="<?php echo $contact_meta_title; ?>">
                                         </div>
                                     </div>             
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Meta Keyword </label>
+                                        <label for="" class="col-sm-3 control-label">Từ khóa Meta </label>
                                         <div class="col-sm-8">
                                             <textarea class="form-control" name="contact_meta_keyword" style="height:100px;"><?php echo $contact_meta_keyword; ?></textarea>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="" class="col-sm-3 control-label">Meta Description </label>
+                                        <label for="" class="col-sm-3 control-label">Mô tả Meta </label>
                                         <div class="col-sm-8">
                                             <textarea class="form-control" name="contact_meta_description" style="height:100px;"><?php echo $contact_meta_description; ?></textarea>
                                         </div>
@@ -279,7 +279,7 @@ foreach ($result as $row) {
                                     <div class="form-group">
                                         <label for="" class="col-sm-3 control-label"></label>
                                         <div class="col-sm-6">
-                                            <button type="submit" class="btn btn-success pull-left" name="form_contact">Update</button>
+                                            <button type="submit" class="btn btn-success pull-left" name="form_contact">Cập nhật</button>
                                         </div>
                                     </div>
                                 </div>

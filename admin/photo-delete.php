@@ -28,7 +28,7 @@ if($photo!='') {
 	unlink('../assets/uploads/'.$photo);
 }
 
-// Delete from tbl_photo
+// Xóa from tbl_photo
 $statement = $pdo->prepare("DELETE FROM tbl_photo WHERE id=?");
 $statement->execute(array($_REQUEST['id']));
 

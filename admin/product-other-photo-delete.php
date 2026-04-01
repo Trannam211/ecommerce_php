@@ -31,7 +31,7 @@ if( !isset($_REQUEST['id']) || !isset($_REQUEST['id1']) ) {
 		unlink('../assets/uploads/product_photos/'.$photo);	
 	}
 
-	// Delete from tbl_testimonial
+	// Xóa from tbl_testimonial
 	$statement = $pdo->prepare("DELETE FROM tbl_product_photo WHERE pp_id=?");
 	$statement->execute(array($_REQUEST['id']));
 

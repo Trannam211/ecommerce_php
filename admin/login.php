@@ -1,6 +1,5 @@
 <?php
-include("inc/vn_admin_translate.php");
-ob_start('vn_admin_translate');
+ob_start();
 session_start();
 include("inc/config.php");
 include("inc/functions.php");
@@ -11,7 +10,7 @@ $error_message='';
 if(isset($_POST['form1'])) {
         
     if(empty($_POST['email']) || empty($_POST['password'])) {
-        $error_message = 'Email and/or Password can not be empty<br>';
+        $error_message = 'Email hoặc mật khẩu không được để trống<br>';
     } else {
 		
 		$email = strip_tags($_POST['email']);
@@ -22,14 +21,14 @@ if(isset($_POST['form1'])) {
     	$total = $statement->rowCount();    
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);    
         if($total==0) {
-            $error_message .= 'Email Address does not match<br>';
+            $error_message .= 'Email không đúng<br>';
         } else {       
             foreach($result as $row) { 
                 $row_password = $row['password'];
             }
         
             if( $row_password != md5($password) ) {
-                $error_message .= 'Password does not match<br>';
+                $error_message .= 'Mật khẩu không đúng<br>';
             } else {       
             
 				$_SESSION['user'] = $row;
@@ -46,7 +45,7 @@ if(isset($_POST['form1'])) {
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Login</title>
+	<title>Đăng nhập</title>
 
 	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 
@@ -62,17 +61,17 @@ if(isset($_POST['form1'])) {
 	<link rel="stylesheet" href="css/bootstrap5-legacy-bridge.css">
 
 	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="css/bootstrap-modern-admin.css">
 </head>
 
 <body class="hold-transition login-page sidebar-mini">
 
 <div class="login-box">
 	<div class="login-logo">
-		<b>Admin Panel</b>
+		<b>Đăng nhập - Trang quản trị</b>
 	</div>
   	<div class="login-box-body">
-    	<p class="login-box-msg">Log in to start your session</p>
-    
+
 	    <?php 
 	    if( (isset($error_message)) && ($error_message!='') ):
 	        echo '<div class="error">'.$error_message.'</div>';
@@ -82,15 +81,15 @@ if(isset($_POST['form1'])) {
 		<form action="" method="post">
 			<?php $csrf->echoInputField(); ?>
 			<div class="form-group has-feedback">
-				<input class="form-control" placeholder="Email address" name="email" type="email" autocomplete="off" autofocus>
+				<input class="form-control" placeholder="Địa chỉ email" name="email" type="email" autocomplete="off" autofocus>
 			</div>
 			<div class="form-group has-feedback">
-				<input class="form-control" placeholder="Password" name="password" type="password" autocomplete="off" value="">
+				<input class="form-control" placeholder="Mật khẩu" name="password" type="password" autocomplete="off" value="">
 			</div>
 			<div class="row">
 				<div class="col-xs-8"></div>
 				<div class="col-xs-4">
-					<input type="submit" class="btn btn-success btn-block btn-flat login-button" name="form1" value="Log In">
+					<input type="submit" class="btn btn-success btn-block btn-flat login-button" name="form1" value="Đăng nhập">
 				</div>
 			</div>
 		</form>

@@ -58,7 +58,7 @@ if(isset($_POST['form2'])) {
 
 <section class="content-header">
     <div class="content-header-left">
-        <h1>Add Shipping Cost</h1>
+        <h1>Thêm Phí vận chuyển</h1>
     </div>
 </section>
 
@@ -88,7 +88,7 @@ if(isset($_POST['form2'])) {
                 <div class="box box-info">
                     <div class="box-body">
                         <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Select Country <span>*</span></label>
+                            <label for="" class="col-sm-2 control-label">Select Quốc gia <span>*</span></label>
                             <div class="col-sm-4">
                                 <select name="country_id" class="form-control select2">
                                     <option value="">Select a country</option>
@@ -123,7 +123,7 @@ if(isset($_POST['form2'])) {
                         <div class="form-group">
                             <label for="" class="col-sm-2 control-label"></label>
                             <div class="col-sm-6">
-                                <button type="submit" class="btn btn-success pull-left" name="form1">Add</button>
+                                <button type="submit" class="btn btn-success pull-left" name="form1">Thêm</button>
                             </div>
                         </div>
                     </div>
@@ -141,7 +141,7 @@ if(isset($_POST['form2'])) {
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>View Shipping Costs</h1>
+		<h1>View Phí vận chuyểns</h1>
 	</div>
 </section>
 
@@ -159,8 +159,8 @@ if(isset($_POST['form2'])) {
 			<thead>
 			    <tr>
 			        <th>#</th>
-			        <th>Country Name</th>
-                    <th>Country Amount</th>
+			        <th>Quốc gia Name</th>
+                    <th>Quốc gia Amount</th>
 			        <th>Action</th>
 			    </tr>
 			</thead>
@@ -182,8 +182,8 @@ if(isset($_POST['form2'])) {
 	                    <td><?php echo $row['country_name']; ?></td>
                         <td><?php echo $row['amount']; ?></td>
 	                    <td>
-	                        <a href="shipping-cost-edit.php?id=<?php echo $row['shipping_cost_id']; ?>" class="btn btn-primary btn-xs">Edit</a>
-	                        <a href="#" class="btn btn-danger btn-xs" data-href="shipping-cost-delete.php?id=<?php echo $row['shipping_cost_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Delete</a>
+	                        <a href="shipping-cost-edit.php?id=<?php echo $row['shipping_cost_id']; ?>" class="btn btn-primary btn-xs">Sửa</a>
+	                        <a href="#" class="btn btn-danger btn-xs" data-href="shipping-cost-delete.php?id=<?php echo $row['shipping_cost_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>
 	                    </td>
 	                </tr>
             		<?php
@@ -201,7 +201,7 @@ if(isset($_POST['form2'])) {
 
 <section class="content-header">
     <div class="content-header-left">
-        <h1>Shipping Cost (Rest of the world)</h1>
+        <h1>Phí vận chuyển (Rest of the world)</h1>
     </div>
 </section>
 
@@ -231,7 +231,7 @@ if(isset($_POST['form2'])) {
                         <div class="form-group">
                             <label for="" class="col-sm-2 control-label"></label>
                             <div class="col-sm-6">
-                                <button type="submit" class="btn btn-success pull-left" name="form2">Update</button>
+                                <button type="submit" class="btn btn-success pull-left" name="form2">Cập nhật</button>
                             </div>
                         </div>
                     </div>
@@ -249,14 +249,14 @@ if(isset($_POST['form2'])) {
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Delete Confirmation</h4>
+                <h4 class="modal-title" id="myModalLabel">Xóa Confirmation</h4>
             </div>
             <div class="modal-body">
                 Are you sure want to delete this item?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a class="btn btn-danger btn-ok">Delete</a>
+                <a class="btn btn-danger btn-ok">Xóa</a>
             </div>
         </div>
     </div>

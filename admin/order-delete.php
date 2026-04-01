@@ -45,11 +45,11 @@ if(!isset($_REQUEST['id'])) {
 		}	
 	endif;	
 
-	// Delete from tbl_order
+	// Xóa from tbl_order
 	$statement = $pdo->prepare("DELETE FROM tbl_order WHERE payment_id=?");
 	$statement->execute(array($payment_id));
 
-	// Delete from tbl_payment
+	// Xóa from tbl_payment
 	$statement = $pdo->prepare("DELETE FROM tbl_payment WHERE id=?");
 	$statement->execute(array($_REQUEST['id']));
 

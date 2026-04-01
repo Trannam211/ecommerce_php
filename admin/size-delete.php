@@ -19,7 +19,7 @@ if(!isset($_REQUEST['id'])) {
 
 <?php
 
-	// Delete from tbl_size
+	// Xóa from tbl_size
 	$statement = $pdo->prepare("DELETE FROM tbl_size WHERE size_id=?");
 	$statement->execute(array($_REQUEST['id']));
 

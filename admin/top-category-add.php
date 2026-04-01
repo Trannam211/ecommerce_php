@@ -6,7 +6,7 @@ if(isset($_POST['form1'])) {
 
     if(empty($_POST['tcat_name'])) {
         $valid = 0;
-        $error_message .= "Top Category Name can not be empty<br>";
+		$error_message .= "Tên danh mục cấp 1 không được để trống<br>";
     } else {
     	// Duplicate Category checking
     	$statement = $pdo->prepare("SELECT * FROM tbl_top_category WHERE tcat_name=?");
@@ -15,7 +15,7 @@ if(isset($_POST['form1'])) {
     	if($total)
     	{
     		$valid = 0;
-        	$error_message .= "Top Category Name already exists<br>";
+        	$error_message .= "Tên danh mục cấp 1 đã tồn tại<br>";
     	}
     }
 
@@ -25,17 +25,17 @@ if(isset($_POST['form1'])) {
 		$statement = $pdo->prepare("INSERT INTO tbl_top_category (tcat_name,show_on_menu) VALUES (?,?)");
 		$statement->execute(array($_POST['tcat_name'],$_POST['show_on_menu']));
 	
-    	$success_message = 'Top Category is added successfully.';
+	    $success_message = 'Đã thêm danh mục cấp 1 thành công.';
     }
 }
 ?>
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Add Top Level Category</h1>
+		<h1>Thêm Danh mục cấp 1</h1>
 	</div>
 	<div class="content-header-right">
-		<a href="top-category.php" class="btn btn-primary btn-sm">View All</a>
+		<a href="top-category.php" class="btn btn-primary btn-sm">Xem danh sách</a>
 	</div>
 </section>
 
@@ -66,24 +66,24 @@ if(isset($_POST['form1'])) {
 				<div class="box box-info">
 					<div class="box-body">
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Top Category Name <span>*</span></label>
+							<label for="" class="col-sm-2 control-label">Tên danh mục cấp 1 <span>*</span></label>
 							<div class="col-sm-4">
 								<input type="text" class="form-control" name="tcat_name">
 							</div>
 						</div>
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Show on Menu? <span>*</span></label>
+							<label for="" class="col-sm-2 control-label">Hiển thị trên menu? <span>*</span></label>
 							<div class="col-sm-4">
 								<select name="show_on_menu" class="form-control" style="width:auto;">
-									<option value="0">No</option>
-									<option value="1">Yes</option>
+									<option value="0">Không</option>
+									<option value="1">Có</option>
 								</select>
 							</div>
 						</div>
 						<div class="form-group">
 							<label for="" class="col-sm-2 control-label"></label>
 							<div class="col-sm-6">
-								<button type="submit" class="btn btn-success pull-left" name="form1">Submit</button>
+								<button type="submit" class="btn btn-success pull-left" name="form1">Gửi</button>
 							</div>
 						</div>
 					</div>

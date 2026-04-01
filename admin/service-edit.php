@@ -67,7 +67,7 @@ if(!isset($_REQUEST['id'])) {
 
 <section class="content-header">
 	<div class="content-header-left">
-		<h1>Edit Service</h1>
+		<h1>Sửa Service</h1>
 	</div>
 	<div class="content-header-right">
 		<a href="service.php" class="btn btn-primary btn-sm">View All</a>
@@ -121,7 +121,7 @@ foreach ($result as $row) {
 							</div>
 						</div>	
 						<div class="form-group">
-							<label for="" class="col-sm-2 control-label">Existing Photo</label>
+							<label for="" class="col-sm-2 control-label">Ảnh hiện tại</label>
 							<div class="col-sm-9" style="padding-top:5px">
 								<img src="../assets/uploads/<?php echo $photo; ?>" alt="Service Photo" style="width:180px;">
 							</div>
@@ -135,7 +135,7 @@ foreach ($result as $row) {
 						<div class="form-group">
 							<label for="" class="col-sm-2 control-label"></label>
 							<div class="col-sm-6">
-								<button type="submit" class="btn btn-success pull-left" name="form1">Submit</button>
+								<button type="submit" class="btn btn-success pull-left" name="form1">Gửi</button>
 							</div>
 						</div>
 					</div>

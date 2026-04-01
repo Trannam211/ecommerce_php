@@ -1,11 +1,36 @@
-<?php require_once('header.php'); ?>
-
 <?php
+require_once(__DIR__ . '/admin/inc/config.php');
+require_once(__DIR__ . '/admin/inc/functions.php');
+
+if(session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+$required_cart_fields = array(
+    'cart_p_id',
+    'cart_size_id',
+    'cart_size_name',
+    'cart_color_id',
+    'cart_color_name',
+    'cart_p_qty',
+    'cart_p_current_price',
+    'cart_p_name',
+    'cart_p_featured_photo'
+);
+foreach($required_cart_fields as $field_name) {
+    if(!isset($_SESSION[$field_name]) || !is_array($_SESSION[$field_name])) {
+        safe_redirect('cart.php');
+    }
+}
+
+// If cart is empty, nothing to delete.
+if(!isset($_SESSION['cart_p_id']) || !is_array($_SESSION['cart_p_id']) || count($_SESSION['cart_p_id']) === 0) {
+    safe_redirect('cart.php');
+}
 
 // Check if the product is valid or not
 if( !isset($_REQUEST['id']) || !isset($_REQUEST['size']) || !isset($_REQUEST['color'])  ) {
-    header('location: cart.php');
-    exit;
+    safe_redirect('cart.php');
 }
 
 $i=0;
@@ -89,5 +114,5 @@ for($i=1;$i<=count($arr_cart_p_id);$i++) {
         $k++;
     }
 }
-header('location: cart.php');
+safe_redirect('cart.php');
 ?>

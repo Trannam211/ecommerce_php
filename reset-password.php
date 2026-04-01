@@ -12,8 +12,7 @@ foreach ($result as $row) {
 <?php
 if( !isset($_GET['email']) || !isset($_GET['token']) )
 {
-    header('location: '.BASE_URL.'login.php');
-    exit;
+    safe_redirect(BASE_URL.'login.php');
 }
 
 $statement = $pdo->prepare("SELECT * FROM tbl_customer WHERE cust_email=? AND cust_token=?");
@@ -22,8 +21,7 @@ $result = $statement->fetchAll(PDO::FETCH_ASSOC);
 $tot = $statement->rowCount();
 if($tot == 0)
 {
-    header('location: '.BASE_URL.'login.php');
-    exit;
+    safe_redirect(BASE_URL.'login.php');
 }
 foreach ($result as $row) {
     $saved_time = $row['cust_timestamp'];
@@ -32,7 +30,7 @@ foreach ($result as $row) {
 $error_message2 = '';
 if(time() - $saved_time > 86400)
 {
-    $error_message2 = LANG_VALUE_144;
+    $error_message2 = 'Liên kết đặt lại mật khẩu đã hết hạn (24 giờ). Vui lòng thử lại.';
 }
 
 if(isset($_POST['form1'])) {
@@ -42,14 +40,14 @@ if(isset($_POST['form1'])) {
     if( empty($_POST['cust_new_password']) || empty($_POST['cust_re_password']) )
     {
         $valid = 0;
-        $error_message .= LANG_VALUE_140.'\\n';
+        $error_message .= 'Vui lòng nhập mật khẩu mới và xác nhận mật khẩu'.'\\n';
     }
     else
     {
         if($_POST['cust_new_password'] != $_POST['cust_re_password'])
         {
             $valid = 0;
-            $error_message .= LANG_VALUE_139.'\\n';
+            $error_message .= 'Mật khẩu nhập lại không khớp'.'\\n';
         }
     }   
 
@@ -59,7 +57,7 @@ if(isset($_POST['form1'])) {
         $statement = $pdo->prepare("UPDATE tbl_customer SET cust_password=?, cust_token=?, cust_timestamp=? WHERE cust_email=?");
         $statement->execute(array(md5($cust_new_password),'','',$_GET['email']));
         
-        header('location: '.BASE_URL.'reset-password-success.php');
+        safe_redirect(BASE_URL.'reset-password-success.php');
     }
 
     
@@ -68,7 +66,7 @@ if(isset($_POST['form1'])) {
 
 <div class="page-banner" style="background-color:#444;background-image: url(assets/uploads/<?php echo $banner_reset_password; ?>);">
     <div class="inner">
-        <h1><?php echo LANG_VALUE_149; ?></h1>
+        <h1>Đổi mật khẩu</h1>
     </div>
 </div>
 
@@ -91,16 +89,16 @@ if(isset($_POST['form1'])) {
                                 <div class="col-md-4"></div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for=""><?php echo LANG_VALUE_100; ?> *</label>
+                                        <label for="">Mật khẩu mới *</label>
                                         <input type="password" class="form-control" name="cust_new_password">
                                     </div>
                                     <div class="form-group">
-                                        <label for=""><?php echo LANG_VALUE_101; ?> *</label>
+                                        <label for="">Nhập lại mật khẩu mới *</label>
                                         <input type="password" class="form-control" name="cust_re_password">
                                     </div>
                                     <div class="form-group">
                                         <label for=""></label>
-                                        <input type="submit" class="btn btn-primary" value="<?php echo LANG_VALUE_149; ?>" name="form1">
+                                        <input type="submit" class="btn btn-primary" value="Đổi mật khẩu" name="form1">
                                     </div>
                                 </div>
                             </div>                        

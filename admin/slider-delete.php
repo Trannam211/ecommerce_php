@@ -31,7 +31,7 @@ if(!isset($_REQUEST['id'])) {
 		unlink('../assets/uploads/'.$photo);	
 	}
 
-	// Delete from tbl_slider
+	// Xóa from tbl_slider
 	$statement = $pdo->prepare("DELETE FROM tbl_slider WHERE id=?");
 	$statement->execute(array($_REQUEST['id']));
 

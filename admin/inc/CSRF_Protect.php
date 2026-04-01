@@ -113,3 +113,4 @@ class CSRF_Protect
 		$_SESSION[$this->namespace] = $token;
 	}
 }
+

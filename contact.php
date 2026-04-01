@@ -105,7 +105,7 @@ if(isset($_POST['form_contact']))
 <td>'.$visitor_name.'</td>
 </tr>
 <tr>
-<td>Email</td>
+<td>Địa chỉ email</td>
 <td>'.$visitor_email.'</td>
 </tr>
 <tr>
@@ -184,7 +184,7 @@ if(isset($_POST['form_contact']))
                             <span><?php echo $contact_phone; ?></span>
                         </address>
                         <address>
-                            <strong>Email:</strong><br>
+                            <strong>Địa chỉ email:</strong><br>
                             <a href="mailto:<?php echo $contact_email; ?>"><span><?php echo $contact_email; ?></span></a>
                         </address>
                     </div>

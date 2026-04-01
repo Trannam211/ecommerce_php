@@ -1,21 +1,19 @@
-<?php require_once('header.php'); ?>
-<!-- fetching row banner login -->
 <?php
-$statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
-$statement->execute();
-$result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-foreach ($result as $row) {
-    $banner_login = $row['banner_login'];
+// Bootstrap without rendering HTML so redirects work reliably.
+require_once(__DIR__ . '/admin/inc/config.php');
+require_once(__DIR__ . '/admin/inc/functions.php');
+require_once(__DIR__ . '/admin/inc/CSRF_Protect.php');
+if(session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
-?>
-<!-- login form -->
-<?php
+$csrf = new CSRF_Protect();
+
+$error_message = '';
+
 if(isset($_POST['form1'])) {
-        
     if(empty($_POST['cust_email']) || empty($_POST['cust_password'])) {
         $error_message = 'Vui lòng nhập email và mật khẩu.<br>';
     } else {
-        
         $cust_email = strip_tags($_POST['cust_email']);
         $cust_password = strip_tags($_POST['cust_password']);
 
@@ -29,23 +27,36 @@ if(isset($_POST['form1'])) {
         }
 
         if($total==0) {
-            $error_message .= 'Email không tồn tại trong hệ thống.<br>';
+            $error_message .= 'Địa chỉ email không tồn tại trong hệ thống.<br>';
         } else {
-            //using MD5 form
-            if( $row_password != md5($cust_password) ) {
+            if($row_password != md5($cust_password)) {
                 $error_message .= 'Mật khẩu không đúng.<br>';
             } else {
                 if($cust_status == 0) {
-                    $error_message .= 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác minh.<br>';
+                    $error_message .= 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra địa chỉ email để xác minh.<br>';
                 } else {
                     $_SESSION['customer'] = $row;
-                    header("location: ".BASE_URL."index.php");
+                    safe_redirect(BASE_URL."index.php");
                 }
             }
-            
         }
     }
 }
+
+require_once('header.php');
+?>
+<!-- fetching row banner login -->
+<?php
+$statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
+$statement->execute();
+$result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
+foreach ($result as $row) {
+    $banner_login = $row['banner_login'];
+}
+?>
+<!-- login form -->
+<?php
+// Login POST is handled before rendering the header.
 ?>
 
 <div class="page-banner" style="background-color:#444;background-image: url(assets/uploads/<?php echo $banner_login; ?>);">
@@ -172,7 +183,7 @@ if(isset($_POST['form1'])) {
                 <form action="" method="post">
                     <?php $csrf->echoInputField(); ?>
                     <div class="form-group">
-                        <label for="cust_email">Email *</label>
+                        <label for="cust_email">Địa chỉ email *</label>
                         <input type="email" class="form-control" id="cust_email" name="cust_email" placeholder="Nhập địa chỉ email" required>
                     </div>
                     <div class="form-group">
