@@ -1,5 +1,13 @@
 <?php require_once('header.php'); ?>
 
+<?php
+$reset_password_message = '';
+if(isset($_SESSION['admin_customer_reset_message'])) {
+	$reset_password_message = (string)$_SESSION['admin_customer_reset_message'];
+	unset($_SESSION['admin_customer_reset_message']);
+}
+?>
+
 <section class="content-header">
 	<div class="content-header-left">
 		<h1>Quản lý người dùng</h1>
@@ -19,6 +27,11 @@
 <section class="content">
 	<div class="row">
 		<div class="col-md-12">
+			<?php if($reset_password_message !== ''): ?>
+				<div class="alert alert-success">
+					<?php echo htmlspecialchars($reset_password_message, ENT_QUOTES, 'UTF-8'); ?>
+				</div>
+			<?php endif; ?>
 			<div class="box box-info">
 				<div class="box-body table-responsive">
 					<table id="example1" class="table table-bordered table-hover table-striped">
@@ -66,6 +79,7 @@
 									<td>
 										<div class="customer-actions">
 											<a href="customer-edit.php?id=<?php echo $row['cust_id']; ?>" class="btn btn-primary btn-sm">Sửa</a>
+											<a href="customer-reset-password.php?id=<?php echo $row['cust_id']; ?>" class="btn btn-warning btn-sm" onclick="return confirm('Đặt lại mật khẩu cho tài khoản này?');">Reset mật khẩu</a>
 											<a href="#" class="btn btn-danger btn-sm" data-href="customer-delete.php?id=<?php echo $row['cust_id']; ?>" data-toggle="modal" data-target="#confirm-delete">Xóa</a>
 										</div>
 									</td>

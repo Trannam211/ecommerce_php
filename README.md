@@ -135,29 +135,27 @@ After Creating Database,
 
 ## Project Structure (Updated)
 
-The project has been reorganized to separate shared frontend includes, database assets, docs, and tests.
+The project has been reorganized so the public storefront lives under `frontend/`, while shared partials live under `app/shared/`.
 
 ```
 eCommerce-website-in-PHP-main/
 |-- admin/                     # Admin panel pages and admin assets
 |-- app/
-|   `-- frontend/
-|       `-- shared/            # Shared frontend partials (header/footer/sidebars)
+|   `-- shared/                # Shared frontend partials (header/footer/sidebars)
 |-- assets/                    # Public static assets for frontend
+|-- frontend/                  # Frontend entry pages
 |-- database/
 |   `-- ecommerceweb.sql       # SQL dump
 |-- docs/
 |   |-- project-info/          # Login details and setup-related notes
 |   `-- screenshots/           # Project screenshots
+|-- index.php                  # Redirects to frontend/index.php
 |-- payment/                   # Bank/PayPal payment integrations
 |-- scripts/                   # Utility scripts
 |-- tests/
 |   `-- manual/                # Manual test pages/files
-`-- *.php                      # Public entry pages
+`-- README.md
 ```
-
-Compatibility note:
-Root files `header.php`, `footer.php`, `customer-sidebar.php`, and `sidebar-category.php` are now lightweight bridge files that load implementations from `app/frontend/shared/` to keep existing page includes working.
 
 Need Help or Customization?
 

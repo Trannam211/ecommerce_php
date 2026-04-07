@@ -4,6 +4,7 @@
 // Flash alerts for delete actions
 $delete_error = (isset($_GET['error']) && $_GET['error'] === 'delete_failed');
 $delete_success = (isset($_GET['success']) && $_GET['success'] === 'deleted');
+$hide_imported_success = (isset($_GET['success']) && $_GET['success'] === 'hidden_imported');
 ?>
 
 <section class="content-header">
@@ -11,6 +12,7 @@ $delete_success = (isset($_GET['success']) && $_GET['success'] === 'deleted');
 		<h1>Quản lý sản phẩm</h1>
 	</div>
 	<div class="content-header-right">
+		<a href="import-receipt.php" class="btn btn-info btn-sm" style="margin-right:6px;">Phiếu nhập</a>
 		<a href="product-add.php" class="btn btn-primary btn-sm">Thêm mới</a>
 	</div>
 </section>
@@ -48,8 +50,18 @@ $delete_success = (isset($_GET['success']) && $_GET['success'] === 'deleted');
 	font-size: 12px;
 }
 
-.product-table .category-lines {
-	line-height: 1.45;
+
+.product-table th.category-col,
+.product-table td.category-col {
+	width: 220px;
+}
+
+.product-table .category-breadcrumb {
+	display: block;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	line-height: 1.4;
 }
 
 .product-table .qty-col,
@@ -77,20 +89,27 @@ $delete_success = (isset($_GET['success']) && $_GET['success'] === 'deleted');
 			<?php if($delete_error): ?>
 				<div class="alert alert-danger">Xóa sản phẩm thất bại. Vui lòng thử lại hoặc kiểm tra dữ liệu liên quan (đơn hàng/thanh toán).</div>
 			<?php endif; ?>
+			<?php if($hide_imported_success): ?>
+				<div class="alert alert-warning">Sản phẩm đã từng nhập hàng nên không xóa cứng. Hệ thống đã chuyển sang trạng thái ẩn.</div>
+			<?php endif; ?>
 			<div class="box box-info">
 				<div class="box-body table-responsive">
 					<table id="example1" class="table table-bordered table-hover table-striped product-table">
 					<thead>
 							<tr>
 								<th width="10">#</th>
+								<th width="90">Mã SP</th>
 								<th>Ảnh</th>
 								<th width="160">Tên sản phẩm</th>
 								<th width="60">Giá cũ</th>
+								<th width="60">Giá vốn</th>
+								<th width="55">% lãi</th>
 								<th width="60">Giá bán</th>
-								<th class="qty-col">Số lượng</th>
+								<th class="qty-col">Tồn kho</th>
+								<th width="70">Ngưỡng</th>
 								<th>Nổi bật</th>
 								<th>Hiển thị</th>
-								<th>Danh mục</th>
+								<th class="category-col">Danh mục</th>
 								<th width="80">Thao tác</th>
 							</tr>
 						</thead>
@@ -98,54 +117,55 @@ $delete_success = (isset($_GET['success']) && $_GET['success'] === 'deleted');
 							<?php
 							$i=0;
 							$statement = $pdo->prepare("SELECT
-														
-														t1.p_id,
-														t1.p_name,
-														t1.p_old_price,
-														t1.p_current_price,
-														t1.p_qty,
-														t1.p_featured_photo,
-														t1.p_is_featured,
-														t1.p_is_active,
-														t1.ecat_id,
-
-														t2.ecat_id,
-														t2.ecat_name,
-
-														t3.mcat_id,
-														t3.mcat_name,
-
-														t4.tcat_id,
-														t4.tcat_name
-
-							                           	FROM tbl_product t1
-							                           	JOIN tbl_end_category t2
-							                           	ON t1.ecat_id = t2.ecat_id
-							                           	JOIN tbl_mid_category t3
-							                           	ON t2.mcat_id = t3.mcat_id
-							                           	JOIN tbl_top_category t4
-							                           	ON t3.tcat_id = t4.tcat_id
-							                           	ORDER BY t1.p_id DESC
-							                           	");
+								p_id,
+								p_code,
+								p_name,
+								p_old_price,
+								p_cost_price,
+								p_profit_percent,
+								p_low_stock_threshold,
+								p_unit,
+								p_current_price,
+								p_qty,
+								p_featured_photo,
+								p_is_featured,
+								p_is_active,
+								ecat_id
+							FROM tbl_product
+							ORDER BY p_id DESC");
 							$statement->execute();
 							$result = $statement->fetchAll(PDO::FETCH_ASSOC);
 							foreach ($result as $row) {
 								$i++;
+								$category_breadcrumb = admin_get_category_breadcrumb($pdo, (int)$row['ecat_id']);
 								?>
 								<tr>
 									<td><?php echo $i; ?></td>
+									<td><?php echo htmlspecialchars((string)$row['p_code'], ENT_QUOTES, 'UTF-8'); ?></td>
 									<td><img src="../assets/uploads/<?php echo $row['p_featured_photo']; ?>" alt="<?php echo $row['p_name']; ?>" class="product-thumb"></td>
 									<td><?php echo $row['p_name']; ?></td>
 									<td><?php echo format_price_vnd($row['p_old_price']); ?></td>
+									<td><?php echo format_price_vnd($row['p_cost_price']); ?></td>
+									<td><?php echo number_format((float)$row['p_profit_percent'], 2); ?>%</td>
 									<td><?php echo format_price_vnd($row['p_current_price']); ?></td>
-									<td class="qty-value"><?php echo $row['p_qty']; ?></td>
+									<td class="qty-value">
+										<?php
+										$qty_value = (int)$row['p_qty'];
+										$low_threshold = (int)$row['p_low_stock_threshold'];
+										echo $qty_value;
+										if($low_threshold > 0 && $qty_value <= $low_threshold) {
+											echo '<br><span class="badge badge-danger" style="margin-top:4px;">Sắp hết</span>';
+										}
+										?>
+									</td>
+									<td><?php echo (int)$row['p_low_stock_threshold']; ?></td>
 									<td>
 										<?php if($row['p_is_featured'] == 1) {echo '<span class="badge badge-success status-badge status-yes">Có</span>';} else {echo '<span class="badge badge-danger status-badge status-no">Không</span>';} ?>
 									</td>
 									<td>
 										<?php if($row['p_is_active'] == 1) {echo '<span class="badge badge-success status-badge status-yes">Có</span>';} else {echo '<span class="badge badge-danger status-badge status-no">Không</span>';} ?>
 									</td>
-									<td class="category-lines"><?php echo $row['tcat_name']; ?><br><?php echo $row['mcat_name']; ?><br><?php echo $row['ecat_name']; ?></td>
+									<td class="category-col"><span class="category-breadcrumb"><?php echo htmlspecialchars($category_breadcrumb, ENT_QUOTES, 'UTF-8'); ?></span></td>
 									<td>										
 										<a href="product-edit.php?id=<?php echo $row['p_id']; ?>" class="btn btn-primary btn-xs">Sửa</a>
 										<a href="#" class="btn btn-danger btn-xs" data-href="product-delete.php?id=<?php echo $row['p_id']; ?>" data-toggle="modal" data-target="#confirm-delete" data-bs-toggle="modal" data-bs-target="#confirm-delete">Xóa</a>  

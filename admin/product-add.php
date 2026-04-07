@@ -163,19 +163,42 @@ function product_collect_uploaded_color_photo_ids($filesBag) {
 	return array_map('intval', array_keys(product_collect_uploaded_color_photo_count($filesBag)));
 }
 
+function product_parse_decimal_input($value) {
+	$normalized = str_replace(',', '.', trim((string)$value));
+	$normalized = preg_replace('/[^0-9.]/', '', $normalized);
+	if($normalized === '') {
+		return 0;
+	}
+	$parts = explode('.', $normalized);
+	if(count($parts) > 2) {
+		$normalized = array_shift($parts).'.'.implode('', $parts);
+	}
+	return (float)$normalized;
+}
+
 $variant_form_rows = array();
 $photo_color_selected = array();
 
 if(isset($_POST['form1'])) {
 	$valid = 1;
+	$_POST['p_code'] = isset($_POST['p_code']) ? strtoupper(trim((string)$_POST['p_code'])) : '';
+	$_POST['p_unit'] = isset($_POST['p_unit']) ? trim((string)$_POST['p_unit']) : 'sp';
 	$_POST['p_old_price'] = isset($_POST['p_old_price']) ? preg_replace('/[^0-9]/', '', $_POST['p_old_price']) : '';
 	$_POST['p_current_price'] = isset($_POST['p_current_price']) ? preg_replace('/[^0-9]/', '', $_POST['p_current_price']) : '';
+	$_POST['p_cost_price'] = isset($_POST['p_cost_price']) ? preg_replace('/[^0-9]/', '', $_POST['p_cost_price']) : '';
+	$_POST['p_profit_percent'] = isset($_POST['p_profit_percent']) ? trim((string)$_POST['p_profit_percent']) : '30';
+	$_POST['p_low_stock_threshold'] = isset($_POST['p_low_stock_threshold']) ? preg_replace('/[^0-9]/', '', $_POST['p_low_stock_threshold']) : '5';
 	$variant_payload = product_collect_variant_rows($_POST);
 	$variant_rows = $variant_payload['rows'];
 	$variant_form_rows = $variant_rows;
 	$photo_color_selected = product_to_int_array(isset($_POST['photo_color_selected']) ? $_POST['photo_color_selected'] : array());
 	$selected_size_ids = $variant_payload['size_ids'];
 	$selected_color_ids = $variant_payload['color_ids'];
+	$profit_percent_value = product_parse_decimal_input($_POST['p_profit_percent']);
+	if($profit_percent_value < 0) {
+		$profit_percent_value = 0;
+	}
+	$_POST['p_profit_percent'] = number_format($profit_percent_value, 2, '.', '');
 
     if(empty($_POST['tcat_id'])) {
         $valid = 0;
@@ -197,10 +220,48 @@ if(isset($_POST['form1'])) {
 		$error_message .= "Tên sản phẩm không được để trống<br>";
     }
 
-    if(empty($_POST['p_current_price'])) {
-        $valid = 0;
-		$error_message .= "Giá bán không được để trống<br>";
-    }
+	if(empty($_POST['p_unit'])) {
+		$_POST['p_unit'] = 'sp';
+	}
+
+	if(empty($_POST['p_cost_price'])) {
+		$valid = 0;
+		$error_message .= "Giá vốn không được để trống<br>";
+	}
+
+	if((float)$_POST['p_cost_price'] <= 0) {
+		$valid = 0;
+		$error_message .= "Giá vốn phải lớn hơn 0<br>";
+	}
+
+	if((float)$profit_percent_value < 0) {
+		$valid = 0;
+		$error_message .= "Tỉ lệ lợi nhuận không hợp lệ<br>";
+	}
+
+	if((float)$_POST['p_cost_price'] > 0) {
+		$calculated_sale_price = (int)round((float)$_POST['p_cost_price'] * (1 + ($profit_percent_value / 100)));
+		if($calculated_sale_price < 1) {
+			$calculated_sale_price = 1;
+		}
+		$_POST['p_current_price'] = (string)$calculated_sale_price;
+		if($_POST['p_old_price'] === '') {
+			$_POST['p_old_price'] = $_POST['p_current_price'];
+		}
+	}
+
+	if($_POST['p_code'] !== '') {
+		$statement = $pdo->prepare("SELECT p_id FROM tbl_product WHERE p_code=? LIMIT 1");
+		$statement->execute(array($_POST['p_code']));
+		if($statement->fetch(PDO::FETCH_ASSOC)) {
+			$valid = 0;
+			$error_message .= "Mã sản phẩm đã tồn tại<br>";
+		}
+	}
+
+	if($_POST['p_low_stock_threshold'] === '') {
+		$_POST['p_low_stock_threshold'] = '0';
+	}
 
 	if($variant_payload['error_message'] !== '') {
 		$valid = 0;
@@ -292,6 +353,10 @@ if(isset($_POST['form1'])) {
 			$ai_id=$row[10];
 		}
 
+		if($_POST['p_code'] === '') {
+			$_POST['p_code'] = 'SP'.str_pad((string)$ai_id, 5, '0', STR_PAD_LEFT);
+		}
+
 		$final_name = 'product-featured-'.$ai_id.'.'.$ext;
         move_uploaded_file( $path_tmp, '../assets/uploads/'.$final_name );
 
@@ -306,7 +371,12 @@ if(isset($_POST['form1'])) {
 		//Saving data into the main table tbl_product
 		$statement = $pdo->prepare("INSERT INTO tbl_product(
 										p_name,
+										p_code,
+										p_unit,
 										p_old_price,
+										p_cost_price,
+										p_profit_percent,
+										p_low_stock_threshold,
 										p_current_price,
 										p_qty,
 										p_featured_photo,
@@ -319,10 +389,15 @@ if(isset($_POST['form1'])) {
 										p_is_featured,
 										p_is_active,
 										ecat_id
-									) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+									) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		$statement->execute(array(
 										$_POST['p_name'],
+										$_POST['p_code'],
+										$_POST['p_unit'],
 										$_POST['p_old_price'],
+										$_POST['p_cost_price'],
+										$_POST['p_profit_percent'],
+										$_POST['p_low_stock_threshold'],
 										$_POST['p_current_price'],
 									$variant_total_qty,
 										$final_name,
@@ -694,7 +769,19 @@ if(isset($_POST['form1'])) {
 								<div class="form-group">
 									<label for="" class="col-sm-3 control-label">Tên sản phẩm <span>*</span></label>
 									<div class="col-sm-4">
-										<input type="text" name="p_name" class="form-control">
+										<input type="text" name="p_name" class="form-control" value="<?php echo isset($_POST['p_name']) ? htmlspecialchars((string)$_POST['p_name'], ENT_QUOTES, 'UTF-8') : ''; ?>">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="" class="col-sm-3 control-label">Mã sản phẩm</label>
+									<div class="col-sm-4">
+										<input type="text" name="p_code" class="form-control" value="<?php echo isset($_POST['p_code']) ? htmlspecialchars((string)$_POST['p_code'], ENT_QUOTES, 'UTF-8') : ''; ?>" placeholder="Để trống để tự sinh mã">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="" class="col-sm-3 control-label">Đơn vị tính</label>
+									<div class="col-sm-4">
+										<input type="text" name="p_unit" class="form-control" value="<?php echo isset($_POST['p_unit']) ? htmlspecialchars((string)$_POST['p_unit'], ENT_QUOTES, 'UTF-8') : 'sp'; ?>" placeholder="Ví dụ: chiếc, hộp, kg">
 									</div>
 								</div>
 								</div>
@@ -712,15 +799,34 @@ if(isset($_POST['form1'])) {
 								<div class="form-section-card">
 									<h3 class="section-title">Giá</h3>
 								<div class="form-group">
-									<label for="" class="col-sm-3 control-label">Giá cũ</label>
+									<label for="" class="col-sm-3 control-label">Giá vốn <span>*</span></label>
 									<div class="col-sm-4">
-										<input type="text" name="p_old_price" class="form-control currency-input" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');">
+										<input type="text" name="p_cost_price" class="form-control currency-input" inputmode="numeric" value="<?php echo (isset($_POST['p_cost_price']) && $_POST['p_cost_price'] !== '' ? number_format((float)$_POST['p_cost_price'],0,'.',',') : ''); ?>" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="" class="col-sm-3 control-label">% lợi nhuận <span>*</span></label>
+									<div class="col-sm-4">
+										<input type="text" name="p_profit_percent" class="form-control" value="<?php echo isset($_POST['p_profit_percent']) ? htmlspecialchars((string)$_POST['p_profit_percent'], ENT_QUOTES, 'UTF-8') : '30'; ?>" inputmode="decimal">
 									</div>
 								</div>
 								<div class="form-group">
 									<label for="" class="col-sm-3 control-label">Giá bán <span>*</span></label>
 									<div class="col-sm-4">
-										<input type="text" name="p_current_price" class="form-control currency-input" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');">
+										<input type="text" name="p_current_price" class="form-control currency-input" inputmode="numeric" value="<?php echo (isset($_POST['p_current_price']) && $_POST['p_current_price'] !== '' ? number_format((float)$_POST['p_current_price'],0,'.',',') : ''); ?>" readonly>
+										<p class="help-block" style="margin-bottom:0;">Tự động tính theo công thức: Giá vốn x (1 + % lợi nhuận/100).</p>
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="" class="col-sm-3 control-label">Giá cũ</label>
+									<div class="col-sm-4">
+										<input type="text" name="p_old_price" class="form-control currency-input" inputmode="numeric" value="<?php echo (isset($_POST['p_old_price']) && $_POST['p_old_price'] !== '' ? number_format((float)$_POST['p_old_price'],0,'.',',') : ''); ?>" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="" class="col-sm-3 control-label">Ngưỡng tồn kho thấp</label>
+									<div class="col-sm-4">
+										<input type="number" min="0" name="p_low_stock_threshold" class="form-control" value="<?php echo isset($_POST['p_low_stock_threshold']) ? (int)$_POST['p_low_stock_threshold'] : 5; ?>">
 									</div>
 								</div>
 								<div class="form-group">
@@ -1055,6 +1161,63 @@ if(isset($_POST['form1'])) {
 		target.value = target.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
 
+	function parseCurrencyToInt(value) {
+		var digits = String(value || '').replace(/[^0-9]/g, '');
+		return digits ? parseInt(digits, 10) : 0;
+	}
+
+	function parsePercentValue(value) {
+		var normalized = String(value || '').trim().replace(',', '.').replace(/[^0-9.]/g, '');
+		var parts = normalized.split('.');
+		if(parts.length > 2) {
+			normalized = parts.shift() + '.' + parts.join('');
+		}
+		var num = parseFloat(normalized);
+		if(isNaN(num) || num < 0) {
+			return 0;
+		}
+		return num;
+	}
+
+	function formatCurrency(num) {
+		var val = Math.max(0, parseInt(num || 0, 10));
+		return val > 0 ? String(val).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '';
+	}
+
+	function updateAutoSalePrice() {
+		var costInput = document.querySelector('input[name="p_cost_price"]');
+		var profitInput = document.querySelector('input[name="p_profit_percent"]');
+		var saleInput = document.querySelector('input[name="p_current_price"]');
+		if(!costInput || !profitInput || !saleInput) {
+			return;
+		}
+
+		var cost = parseCurrencyToInt(costInput.value);
+		var profit = parsePercentValue(profitInput.value);
+		var sale = 0;
+		if(cost > 0) {
+			sale = Math.round(cost * (1 + (profit / 100)));
+			if(sale < 1) {
+				sale = 1;
+			}
+		}
+		saleInput.value = formatCurrency(sale);
+	}
+
+	document.addEventListener('input', function(e) {
+		if(!e.target) {
+			return;
+		}
+		if(e.target.name === 'p_cost_price') {
+			normalizeCurrencyInput(e.target);
+			updateAutoSalePrice();
+		}
+		if(e.target.name === 'p_profit_percent') {
+			e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
+			updateAutoSalePrice();
+		}
+	});
+
 	document.addEventListener('change', function(e) {
 		if(e.target && e.target.classList.contains('photo-color-select')) {
 			updatePhotoRowInput(e.target.closest('tr'));
@@ -1118,6 +1281,7 @@ if(isset($_POST['form1'])) {
 
 	renderColorPhotoBlocks();
 	refreshVariantColorSelects();
+	updateAutoSalePrice();
 })();
 </script>
 

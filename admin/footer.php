@@ -30,6 +30,10 @@
 		// Fallback (no-jQuery) handler for confirm-delete.
 		// Ensures clicking "Xóa" always navigates to the stored delete URL.
 		(function () {
+			// If jQuery is available, prefer the main jQuery implementation below.
+			if (window.jQuery) {
+				return;
+			}
 			var STORAGE_KEY = 'admin-delete-return-state';
 
 			function safeSetReturnState(partial) {
@@ -245,15 +249,20 @@
 			if (!window.jQuery || !$.fn || !$.fn.DataTable) {
 				return null;
 			}
-			if (!$(selector).length) {
+			var $table = $(selector).first();
+			if (!$table.length) {
 				return null;
 			}
-			if ($.fn.DataTable.isDataTable(selector)) {
-				return $(selector).DataTable();
+			if ($.fn.DataTable.isDataTable($table[0])) {
+				return $table.DataTable();
 			}
 			var language = getDataTableLanguageVi();
+			var emptyTableMessage = $table.attr('data-empty-table') || $table.attr('data-dt-empty') || '';
+			if (emptyTableMessage) {
+				language.emptyTable = emptyTableMessage;
+			}
 			var config = $.extend(true, { language: language }, options || {});
-			return $(selector).DataTable(config);
+			return $table.DataTable(config);
 		}
 
 		function enhanceDataTableSearchControls() {
@@ -324,19 +333,23 @@
 			});
 		}
 
-		// --- Confirm delete modal wiring (must be resilient) ---
-		var STORAGE_KEY = 'admin-delete-return-state';
+		// --- Return state (scroll + DataTable) ---
+		var STORAGE_KEY = 'admin-return-state';
+		var STORAGE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
 		function setReturnStateWithDataTable() {
 			try {
 				var state = {
+					ts: Date.now(),
 					path: window.location.pathname,
 					scrollY: window.scrollY || window.pageYOffset || 0
 				};
 				var dt = getOrInitDataTableVi('#example1');
-					if (dt) {
-						state.dtPage = dt.page();
-						state.dtLen = dt.page.len();
-					}
+				if (dt) {
+					state.dtPage = dt.page();
+					state.dtLen = dt.page.len();
+					state.dtSearch = dt.search();
+					state.dtOrder = dt.order();
+				}
 				sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 			} catch (e) {
 				// ignore
@@ -345,27 +358,41 @@
 
 		function restoreReturnStateWithDataTable() {
 			try {
-				var params = new URLSearchParams(window.location.search || '');
-				var isDeleteReturn = params.get('success') === 'deleted' || params.get('error') === 'delete_failed';
-				if (!isDeleteReturn) {
-					return;
-				}
 				var raw = sessionStorage.getItem(STORAGE_KEY);
 				if (!raw) {
 					return;
 				}
-				sessionStorage.removeItem(STORAGE_KEY);
 				var state = JSON.parse(raw) || {};
+				var ts = Number(state.ts || 0);
+				if (ts && (Date.now() - ts) > STORAGE_TTL_MS) {
+					sessionStorage.removeItem(STORAGE_KEY);
+					return;
+				}
 				if (state.path && state.path !== window.location.pathname) {
 					return;
 				}
+				sessionStorage.removeItem(STORAGE_KEY);
 				if (typeof state.dtPage !== 'undefined') {
 					var dt = getOrInitDataTableVi('#example1');
 					if (dt) {
-						if (state.dtLen) {
+						var needsDraw = false;
+						if (typeof state.dtLen !== 'undefined' && state.dtLen) {
 							dt.page.len(state.dtLen);
+							needsDraw = true;
 						}
-						dt.page(state.dtPage).draw(false);
+						if (typeof state.dtSearch === 'string') {
+							dt.search(state.dtSearch);
+							needsDraw = true;
+						}
+						if (typeof state.dtOrder !== 'undefined' && state.dtOrder) {
+							dt.order(state.dtOrder);
+							needsDraw = true;
+						}
+						dt.page(state.dtPage);
+						needsDraw = true;
+						if (needsDraw) {
+							dt.draw(false);
+						}
 					}
 				}
 				var y = Number(state.scrollY || 0);
@@ -394,8 +421,73 @@
 			return '';
 		}
 
+		function isModifiedClick(e) {
+			if (!e) {
+				return false;
+			}
+			if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+				return true;
+			}
+			// Middle click, right click, etc.
+			if (typeof e.which !== 'undefined' && e.which !== 1) {
+				return true;
+			}
+			return false;
+		}
+
+		function shouldPreserveReturnStateForLink($link, e) {
+			if (!$link || !$link.length) {
+				return false;
+			}
+			if (isModifiedClick(e)) {
+				return false;
+			}
+			if (e && typeof e.isDefaultPrevented === 'function' && e.isDefaultPrevented()) {
+				return false;
+			}
+			var target = String($link.attr('target') || '').toLowerCase();
+			if (target === '_blank') {
+				return false;
+			}
+			var href = $.trim(String($link.attr('href') || ''));
+			if (!href || href === '#' || href.charAt(0) === '#') {
+				return false;
+			}
+			if (/^(javascript:|mailto:|tel:)/i.test(href)) {
+				return false;
+			}
+			var toggle = String($link.attr('data-toggle') || $link.attr('data-bs-toggle') || '').toLowerCase();
+			if (toggle === 'modal' || toggle === 'dropdown' || toggle === 'collapse' || toggle === 'offcanvas') {
+				return false;
+			}
+			if ($link.is('[data-target], [data-bs-target]')) {
+				return false;
+			}
+			return true;
+		}
+
+		// Preserve table paging + scroll when clicking action buttons.
+		$(document).on('click', '.content a.btn', function(e) {
+			var $link = $(this);
+			if (!shouldPreserveReturnStateForLink($link, e)) {
+				return;
+			}
+			setReturnStateWithDataTable();
+		});
+
+		// Never allow placeholder links inside admin content to jump to the top.
+		$(document).on('click', '.content a[href="#"]', function(e) {
+			if (e && typeof e.preventDefault === 'function') {
+				e.preventDefault();
+			}
+		});
+
 		// When a trigger is clicked, store delete URL immediately.
-		$(document).on('click', '[data-target="#confirm-delete"], [data-bs-target="#confirm-delete"]', function() {
+		$(document).on('click', '[data-target="#confirm-delete"], [data-bs-target="#confirm-delete"]', function(e) {
+			// Never allow href="#" to jump to the top.
+			if (e && typeof e.preventDefault === 'function') {
+				e.preventDefault();
+			}
 			var href = resolveDeleteHref($(this));
 			$('#confirm-delete').data('delete-href', href || '');
 			$('#confirm-delete .btn-ok').attr('href', href || '#').attr('data-href', href || '');
@@ -480,7 +572,10 @@
 				"searching": false,
 				"ordering": true,
 				"info": true,
-				"autoWidth": false
+				"autoWidth": false,
+				"language": {
+					"emptyTable": "Không có sản phẩm nào dưới ngưỡng cảnh báo."
+				}
 			});
 			enhanceDataTableSearchControls();
 		}

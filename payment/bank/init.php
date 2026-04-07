@@ -4,25 +4,8 @@ session_start();
 require_once __DIR__ . '/../../admin/inc/config.php';
 require_once __DIR__ . '/../../admin/inc/functions.php';
 
-$cod_on_off = 1;
-try {
-    $statement = $pdo->prepare("SELECT cod_on_off FROM tbl_settings WHERE id=1");
-    $statement->execute();
-    $row = $statement->fetch(PDO::FETCH_ASSOC);
-    if($row && isset($row['cod_on_off'])) {
-        $cod_on_off = (int)$row['cod_on_off'];
-    }
-} catch(PDOException $e) {
-    // Keep default ON for old databases missing cod_on_off.
-    $cod_on_off = 1;
-}
-
-if($cod_on_off !== 1) {
-    safe_redirect('../../frontend/checkout.php');
-}
-
-if(!isset($_POST['form_cod']) || !isset($_SESSION['customer']) || !isset($_SESSION['cart_p_id'])) {
-    safe_redirect('../../frontend/checkout.php');
+if(!isset($_POST['form_bank']) || !isset($_SESSION['customer']) || !isset($_SESSION['cart_p_id'])) {
+    safe_redirect('../../checkout.php');
 }
 
 $all_cart_keys = array_keys($_SESSION['cart_p_id']);
@@ -42,7 +25,7 @@ if(count($selected_cart_keys) === 0) {
 }
 
 if(count($selected_cart_keys) === 0) {
-    safe_redirect('../../frontend/cart.php');
+    safe_redirect('../../cart.php');
 }
 
 $payment_date = date('Y-m-d H:i:s');
@@ -50,6 +33,10 @@ $payment_id = time();
 $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
 $order_total_amount = (int)round($amount);
 $paid_amount = 0;
+$bank_transaction_info = isset($_POST['bank_transaction_info']) ? trim((string)$_POST['bank_transaction_info']) : '';
+if($bank_transaction_info === '') {
+    $bank_transaction_info = 'Khach chua cung cap ma giao dich';
+}
 
 $has_order_total_amount = false;
 try {
@@ -90,8 +77,8 @@ if($has_order_total_amount) {
                         '',
                         '',
                         '',
-                        '',
-                        'Cash On Delivery',
+                        $bank_transaction_info,
+                        'Bank Deposit',
                         'Pending',
                         'Pending',
                         $payment_id,
@@ -126,8 +113,8 @@ if($has_order_total_amount) {
                         '',
                         '',
                         '',
-                        '',
-                        'Cash On Delivery',
+                        $bank_transaction_info,
+                        'Bank Deposit',
                         'Pending',
                         'Pending',
                         $payment_id
@@ -162,12 +149,12 @@ $statement = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
 $statement->execute();
 $variant_table_exists = $statement->rowCount() > 0;
 if($variant_table_exists && count($arr_cart_p_id) > 0) {
-	$statement = $pdo->prepare("SELECT p_id, size_id, color_id, pv_qty FROM tbl_product_variant");
-	$statement->execute();
-	while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-		$key = ((int)$row['p_id']).'_'.((int)$row['size_id']).'_'.((int)$row['color_id']);
-		$variant_stock_map[$key] = (int)$row['pv_qty'];
-	}
+    $statement = $pdo->prepare("SELECT p_id, size_id, color_id, pv_qty FROM tbl_product_variant");
+    $statement->execute();
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        $key = ((int)$row['p_id']).'_'.((int)$row['size_id']).'_'.((int)$row['color_id']);
+        $variant_stock_map[$key] = (int)$row['pv_qty'];
+    }
 }
 
 $stock_map = array();
@@ -262,4 +249,5 @@ unset($_SESSION['checkout_selected_item_keys']);
 
 $_SESSION['last_payment_id'] = $payment_id;
 
-safe_redirect('../../frontend/payment_success.php');
+safe_redirect('../../payment_success.php');
+

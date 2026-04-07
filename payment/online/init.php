@@ -4,24 +4,7 @@ session_start();
 require_once __DIR__ . '/../../admin/inc/config.php';
 require_once __DIR__ . '/../../admin/inc/functions.php';
 
-$cod_on_off = 1;
-try {
-    $statement = $pdo->prepare("SELECT cod_on_off FROM tbl_settings WHERE id=1");
-    $statement->execute();
-    $row = $statement->fetch(PDO::FETCH_ASSOC);
-    if($row && isset($row['cod_on_off'])) {
-        $cod_on_off = (int)$row['cod_on_off'];
-    }
-} catch(PDOException $e) {
-    // Keep default ON for old databases missing cod_on_off.
-    $cod_on_off = 1;
-}
-
-if($cod_on_off !== 1) {
-    safe_redirect('../../frontend/checkout.php');
-}
-
-if(!isset($_POST['form_cod']) || !isset($_SESSION['customer']) || !isset($_SESSION['cart_p_id'])) {
+if(!isset($_POST['form_online']) || !isset($_SESSION['customer']) || !isset($_SESSION['cart_p_id'])) {
     safe_redirect('../../frontend/checkout.php');
 }
 
@@ -50,6 +33,7 @@ $payment_id = time();
 $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
 $order_total_amount = (int)round($amount);
 $paid_amount = 0;
+$payment_note = 'Online placeholder - chua xu ly cong thanh toan thuc te';
 
 $has_order_total_amount = false;
 try {
@@ -90,8 +74,8 @@ if($has_order_total_amount) {
                         '',
                         '',
                         '',
-                        '',
-                        'Cash On Delivery',
+                        $payment_note,
+                        'Online Payment',
                         'Pending',
                         'Pending',
                         $payment_id,
@@ -126,8 +110,8 @@ if($has_order_total_amount) {
                         '',
                         '',
                         '',
-                        '',
-                        'Cash On Delivery',
+                        $payment_note,
+                        'Online Payment',
                         'Pending',
                         'Pending',
                         $payment_id
@@ -162,12 +146,12 @@ $statement = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
 $statement->execute();
 $variant_table_exists = $statement->rowCount() > 0;
 if($variant_table_exists && count($arr_cart_p_id) > 0) {
-	$statement = $pdo->prepare("SELECT p_id, size_id, color_id, pv_qty FROM tbl_product_variant");
-	$statement->execute();
-	while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-		$key = ((int)$row['p_id']).'_'.((int)$row['size_id']).'_'.((int)$row['color_id']);
-		$variant_stock_map[$key] = (int)$row['pv_qty'];
-	}
+    $statement = $pdo->prepare("SELECT p_id, size_id, color_id, pv_qty FROM tbl_product_variant");
+    $statement->execute();
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        $key = ((int)$row['p_id']).'_'.((int)$row['size_id']).'_'.((int)$row['color_id']);
+        $variant_stock_map[$key] = (int)$row['pv_qty'];
+    }
 }
 
 $stock_map = array();

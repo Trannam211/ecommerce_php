@@ -60,6 +60,13 @@ if(isset($_POST['form1'])) {
         $cust_datetime = date('Y-m-d H:i:s');
         $cust_timestamp = time();
 
+        ensure_customer_password_storage($pdo);
+        $cust_password_hash = password_hash($cust_password, PASSWORD_DEFAULT);
+        if($cust_password_hash === false) {
+            $valid = 0;
+            $error_message .= "Không thể tạo mật khẩu an toàn. Vui lòng thử lại.<br>";
+        } else {
+
         $statement = $pdo->prepare("INSERT INTO tbl_customer (
                                         cust_name,
                                         cust_email,
@@ -74,7 +81,7 @@ if(isset($_POST['form1'])) {
             $cust_name,
             $cust_email,
             $cust_phone,
-            md5($cust_password),
+            $cust_password_hash,
             '',
             $cust_datetime,
             $cust_timestamp,
@@ -99,6 +106,8 @@ if(isset($_POST['form1'])) {
         $success_message = 'Đã thêm người dùng thành công.';
 
         $_POST = array();
+
+        }
     }
 }
 ?>

@@ -10,6 +10,8 @@ $success_message = '';
 $error_message1 = '';
 $success_message1 = '';
 
+ensure_project_schema($pdo);
+
 // Check if the user is logged in or not
 if(!isset($_SESSION['user'])) {
 	header('location: login.php');
@@ -137,6 +139,20 @@ if(!isset($_SESSION['user'])) {
                             <i class="fa fa-shopping-bag"></i> <span>Quản lý sản phẩm</span>
                         </a>
                     </li>
+
+
+					<li class="treeview <?php if( ($cur_page == 'import-receipt.php') || ($cur_page == 'import-receipt-edit.php') ) {echo 'active';} ?>">
+						<a href="import-receipt.php">
+							<i class="fa fa-truck"></i> <span>Nhập hàng</span>
+						</a>
+					</li>
+
+
+					<li class="treeview <?php if( ($cur_page == 'inventory-report.php') ) {echo 'active';} ?>">
+						<a href="inventory-report.php">
+							<i class="fa fa-bar-chart"></i> <span>Báo cáo tồn kho</span>
+						</a>
+					</li>
 
 
                     <li class="treeview <?php if( ($cur_page == 'order.php') ) {echo 'active';} ?>">
