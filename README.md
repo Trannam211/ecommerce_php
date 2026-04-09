@@ -38,84 +38,78 @@ Trong phạm vi đề tài, hệ thống website bán thời trang được xây
 - Quản lý phí vận chuyển và các nội dung hiển thị trên website.
 - Thống kê, báo cáo phục vụ công tác quản lý và vận hành.
 
-## Featured, Latest and Popular Products:.
+## Giao diện website:.
+### Trang chủ:
+#### Hiển thị sản phẩm nổi bật
+<img width="1889" height="898" alt="image" src="https://github.com/user-attachments/assets/df86b1ea-75ab-4b5a-bc88-880f6f883ac3" />
 
-When it comes to projects such as  eCommerce, it is mandatory thing that a website should include these sections for user satisfaction. Not just satisfaction, it also helps to develop a two-way relationship between the end-users and the website.
+#### Hiện thị sản phẩm mới
+<img width="1903" height="889" alt="image" src="https://github.com/user-attachments/assets/e278e30e-86e0-4cfe-a147-9da2ef1a30d7" />
 
-<img width="939" alt="Screenshot 2024-07-18 155503" src="https://github.com/user-attachments/assets/5f725c04-157f-4ed9-aa73-13b1f9c35d4c">
+#### Hiện thị sản phẩm phổ biến
+<img width="1891" height="886" alt="image" src="https://github.com/user-attachments/assets/fb624868-1c81-482e-bcc0-e627bb977ffd" />
 
-Speaking of it, the featured section helps the end-users to interact with their products, either way, to boost it up as well. This particular section tends to attract users to their featured products. Likewise, as the name itself suggest the latest products, it displays a certain number of recently added products on the client-side.
+### Trang chi tiết sản phẩm:
+<img width="1908" height="905" alt="image" src="https://github.com/user-attachments/assets/248a9f5b-272c-4ed9-8336-5b277c6bf2ab" />
 
-<img width="951" alt="Screenshot 2024-07-18 155402" src="https://github.com/user-attachments/assets/22c78a1a-bd62-4473-b043-afbbe1986c51">
+### Giỏ hàng:
+<img width="1919" height="903" alt="image" src="https://github.com/user-attachments/assets/68da735d-22c6-497e-a46c-c2e7edd12bf1" />
 
-Similarly, this  eCommerce website project counts total views on a certain product in order to display under popular category. Meaning, all the most-viewed products are automatically listed under it. In fact, these sections are totally controllable by the system administrator including their number of display products.
+### Đơn hàng:
+<img width="1913" height="908" alt="image" src="https://github.com/user-attachments/assets/5b545897-c980-4e10-af7f-c3857d87b79a" />
 
-<img width="944" alt="Screenshot 2024-07-18 155612" src="https://github.com/user-attachments/assets/3f459e5b-adf1-4a67-9b1d-ec3586d83dba">
+### Dashboard Admin:
+<img width="1916" height="904" alt="image" src="https://github.com/user-attachments/assets/f56a0923-9999-4758-9208-9fce45dbcd06" />
 
-## Cart, Product Category, View Customer’s Order and More:
+### Quản lý sản phẩm:
+<img width="1911" height="901" alt="image" src="https://github.com/user-attachments/assets/ffc4c06c-12e5-459e-9ed7-32bb00d2d286" />
 
-Talking about the product category, the customers can simply switch product sections with a simple click. With it, the website displays all the available products under the requested category. For instance, clicking on the men’s section displays products related to men and so on.
+### Quản lý nhập hàng:
+<img width="1900" height="903" alt="image" src="https://github.com/user-attachments/assets/e39d2d98-6a36-4557-a08a-738e4da5d1f0" />
 
-This whole website contains a system to top and end level navigation for easy user interaction within the website. Also, a cart system is available for the users in order to add products to it for the checkout procedure. Also, this particular section contains all the necessary features such as updating the cart, removing items, and more.
+#### Quản lý đơn hàng:
+<img width="1919" height="902" alt="image" src="https://github.com/user-attachments/assets/5de8fe44-4996-4426-b23b-9a644836fa9a" />
 
-<img width="946" alt="Screenshot 2024-07-18 155825" src="https://github.com/user-attachments/assets/e7023ca6-21a6-46de-9e99-433061b0fcc0">
+#### Quản lý người dùng:
+<img width="1898" height="601" alt="image" src="https://github.com/user-attachments/assets/08084ee7-c95f-4de1-9f6c-063b5858186a" />
 
-## Admin Panel:
 
-Now moving towards the admin panel, an administrator has full control over the system. An admin has the right to manage the proper flow of the system. He/she can manage website settings, image sliders, products, orders, customers, and more. Speaking of website settings, it means an admin can update header-footer settings, website brandings, and other website details.
+## Cấu trúc dự án
 
-Also, the admin has to manage shop settings such as color, size, shipping cost, categories. In-depth, the category refers to top, mid, and end level categories for displaying products. Each product needs to have a top, mid, and end level category just like a host for management of it. In fact, these are the exact point which displays under the website’s navigation bar. Besides, an administrator can manage image sliders, page settings, services sections for the client-side of things.
-
-<img width="959" alt="Screenshot 2024-07-18 154915" src="https://github.com/user-attachments/assets/270be569-55dd-4be5-a9a4-9694984d9441">
-
-## Installation:
-
-After Starting Apache and MySQL in XAMPP, follow the following steps:
-
-1st Step: Extract file
-
-2nd Step: Copy the main project folder
-
-3rd Step: Paste in xampp/htdocs/
-
-Now Connecting Database 4th Step: Open a browser and go to URL “http://localhost/phpmyadmin/”
-
-5th Step: Click on the databases tab
-
-6th Step: Create a database named “ecommerceweb” and then click on the import tab
-
-7th Step: Click on browse file and select “ecommerceweb.sql” file inside “database/ecommerceweb.sql”
-
-8th Step: Click on go.
-
-After Creating Database,
-
-9th Step: Open a browser and go to URL “http://localhost/eCommerce-website-in-PHP”
-
-## Project Structure (Updated)
-
-The project has been reorganized so the public storefront lives under `frontend/`, while shared partials live under `app/shared/`.
-
-```
 eCommerce-website-in-PHP-main/
-|-- admin/                     # Admin panel pages and admin assets
+|-- admin/                     # Admin panel (quản lý sản phẩm, đơn hàng, khách hàng, slider,...)
+|   |-- css/                   # CSS admin
+|   |-- js/                    # JavaScript admin
+|   |-- inc/                   # Config, functions, CSRF
+|   `-- ...                    # Các trang CRUD và quản lý khác
+|
 |-- app/
-|   `-- shared/                # Shared frontend partials (header/footer/sidebars)
-|-- assets/                    # Public static assets for frontend
-|-- frontend/                  # Frontend entry pages
+|   |-- controllers/           # Controller (nếu mở rộng kiến trúc)
+|   |-- models/                # Model
+|   `-- shared/                # Partial frontend dùng chung (header/footer/sidebar)
+|
+|-- assets/                    # CSS, JS, fonts, hình ảnh, uploads
+|
 |-- database/
 |   `-- ecommerceweb.sql       # SQL dump
+|
 |-- docs/
-|   |-- project-info/          # Login details and setup-related notes
-|   `-- screenshots/           # Project screenshots
-|-- index.php                  # Redirects to frontend/index.php
-|-- payment/                   # Bank/PayPal payment integrations
-|-- scripts/                   # Utility scripts
-|-- tests/
-|   `-- manual/                # Manual test pages/files
-`-- README.md
-```
+|   |-- project-info/          # Hướng dẫn cài đặt, login
+|   `-- screenshots/           # Ảnh minh họa project
+|
+|-- frontend/                  # Trang người dùng (storefront)
+|   |-- index.php              # Trang chủ
+|   |-- product.php            # Trang chi tiết sản phẩm
+|   |-- cart.php               # Giỏ hàng
+|   |-- checkout.php           # Thanh toán
+|   `-- ...                    # Các trang khác (registration, dashboard, search,...)
+|
+|-- payment/                   # Module thanh toán (Bank/COD/PayPal)
+|
+|-- scripts/                   # Script tiện ích (migrate, backup, convert DB)
+|
+|-- tests/                     # Test thủ công
+|
+|-- index.php                  # Entry root
+`-- README.md                  # Tài liệu dự án
 
-Need Help or Customization?
-
-If you need assistance with setup, customization, or any other support, feel free to contact me. I’m here to help and provide the best solutions for your needs.
