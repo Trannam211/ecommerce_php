@@ -1,8 +1,9 @@
-## eCommerce-website-in-PHP
+## Website bán thời trang trực tuyến
 
-A fully functional project based on an Online  Ecommerce Website that uses PHP Language with  MySQL database. Following PHP  MySQL project contains all the essential features which can be in use for the final-year IT students for their college projects. It has a number of features that will allow users to manage products and shop online.
+Dự án website bán thời trang trực tuyến được xây dựng bằng ngôn ngữ PHP và cơ sở dữ liệu MySQL. Dự án này bao gồm đầy đủ các chức năng cần thiết cho một hệ thống mua sắm trực tuyến và là đồ án học tập cho sinh viên công nghệ thông tin. Nó cung cấp nhiều tính năng cho phép người dùng quản lý sản phẩm và mua sắm trực tuyến.
 
-<img width="949" alt="Screenshot 2024-07-09 130858" src="https://github.com/user-attachments/assets/7dd4bf52-7c73-44f1-83cb-58e828bc8142">
+<img width="1898" height="825" alt="image" src="https://github.com/user-attachments/assets/8068a2cc-8c86-421e-bbac-6ab128d71fa1" />
+
 
 ## Technologies:
 
