@@ -98,13 +98,15 @@ if(!isset($_REQUEST['id'])) {
 		$statement = $pdo->prepare("DELETE FROM tbl_product_photo WHERE p_id=?");
 		$statement->execute(array($product_id));
 
-		// Xóa from tbl_product_size
-		$statement = $pdo->prepare("DELETE FROM tbl_product_size WHERE p_id=?");
-		$statement->execute(array($product_id));
-
-		// Xóa from tbl_product_color
-		$statement = $pdo->prepare("DELETE FROM tbl_product_color WHERE p_id=?");
-		$statement->execute(array($product_id));
+		if(schema_table_exists($pdo, 'tbl_product_size')) {
+			$statement = $pdo->prepare("DELETE FROM tbl_product_size WHERE p_id=?");
+			$statement->execute(array($product_id));
+		}
+		
+		if(schema_table_exists($pdo, 'tbl_product_color')) {
+			$statement = $pdo->prepare("DELETE FROM tbl_product_color WHERE p_id=?");
+			$statement->execute(array($product_id));
+		}
 
 		$statement = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
 		$statement->execute();

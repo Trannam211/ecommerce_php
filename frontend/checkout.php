@@ -8,7 +8,36 @@ foreach ($result as $row) {
     $banner_checkout = $row['banner_checkout'];
     $cod_on_off = isset($row['cod_on_off']) ? (int)$row['cod_on_off'] : 1;
     $bank_detail = isset($row['bank_detail']) ? trim((string)$row['bank_detail']) : '';
+    $paypal_on_off = isset($row['paypal_on_off']) ? (int)$row['paypal_on_off'] : 0;
+    $paypal_client_id = isset($row['paypal_client_id']) ? trim((string)$row['paypal_client_id']) : '';
+    if($paypal_client_id === '' && isset($row['paypal_email'])) {
+        $paypal_client_id = trim((string)$row['paypal_email']);
+    }
+    $paypal_client_secret = isset($row['paypal_client_secret']) ? trim((string)$row['paypal_client_secret']) : '';
+    $paypal_env = isset($row['paypal_env']) ? strtolower(trim((string)$row['paypal_env'])) : 'sandbox';
+    $paypal_currency = isset($row['paypal_currency']) ? strtoupper(trim((string)$row['paypal_currency'])) : 'USD';
+    $paypal_exchange_rate = isset($row['paypal_exchange_rate']) ? (float)$row['paypal_exchange_rate'] : 24000;
 }
+
+if(!isset($paypal_on_off)) {
+    $paypal_on_off = 0;
+}
+if(!isset($paypal_client_id)) {
+    $paypal_client_id = '';
+}
+if(!isset($paypal_client_secret)) {
+    $paypal_client_secret = '';
+}
+if(!isset($paypal_env) || $paypal_env !== 'live') {
+    $paypal_env = 'sandbox';
+}
+if(!isset($paypal_currency) || !preg_match('/^[A-Z]{3}$/', $paypal_currency)) {
+    $paypal_currency = 'USD';
+}
+if(!isset($paypal_exchange_rate) || $paypal_exchange_rate <= 0) {
+    $paypal_exchange_rate = 24000;
+}
+$paypal_enabled = ((int)$paypal_on_off === 1 && $paypal_client_id !== '' && $paypal_client_secret !== '');
 
 if(!isset($bank_detail) || $bank_detail === '') {
     $bank_detail = "Ngân hàng: Vietcombank\nChủ tài khoản: CUA HANG QUAN AO\nSố tài khoản: 0123456789\nNội dung chuyển khoản: Mã đơn + SĐT";
@@ -163,6 +192,16 @@ foreach ($result as $row) {
     $shipping_cost = (float)$row['amount'];
 }
 $final_total = $table_total_price + $shipping_cost;
+$paypal_currency_precision = in_array($paypal_currency, array('JPY', 'HUF', 'TWD'), true) ? 0 : 2;
+$paypal_total_amount = (float)$final_total;
+if($paypal_currency !== 'VND') {
+    $paypal_total_amount = $paypal_total_amount / (float)$paypal_exchange_rate;
+}
+$paypal_total_amount = round($paypal_total_amount, $paypal_currency_precision);
+if($paypal_total_amount <= 0) {
+    $paypal_total_amount = ($paypal_currency_precision === 0) ? 1 : 0.01;
+}
+$paypal_total_amount_display = number_format((float)$paypal_total_amount, $paypal_currency_precision, '.', '');
 
 $selected_full_address = '';
 if($selected_address) {
@@ -563,8 +602,9 @@ if($selected_address) {
                                         <?php if((int)$cod_on_off === 1): ?>
                                             <option value="Cash On Delivery">Thanh toán khi nhận hàng</option>
                                         <?php endif; ?>
-                                        <option value="Bank Deposit">Chuyển khoản ngân hàng</option>
-                                        <option value="Online Payment">Thanh toán trực tuyến (chưa xử lý)</option>
+                                        <?php if($paypal_enabled): ?>
+                                            <option value="PayPal">PayPal (Online)</option>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
 
@@ -585,27 +625,21 @@ if($selected_address) {
                                         </form>
                                     <?php endif; ?>
 
-                                    <form action="../payment/bank/init.php" method="post" id="bank_form" style="display:none;">
-                                        <div class="checkout-bank-box">
-                                            <strong>Thông tin chuyển khoản</strong><br>
-                                            <?php echo nl2br(htmlspecialchars($bank_detail, ENT_QUOTES, 'UTF-8')); ?>
-                                        </div>
-                                        <div class="form-group" style="margin-bottom:10px;">
-                                            <label for="bank_transaction_info" style="font-size:13px;color:#1f2d3d;">Mã giao dịch/Nội dung chuyển khoản</label>
-                                            <textarea name="bank_transaction_info" id="bank_transaction_info" class="form-control" rows="3" placeholder="Nhập mã giao dịch hoặc nội dung chuyển khoản"></textarea>
-                                        </div>
-                                        <input type="hidden" name="amount" value="<?php echo $final_total; ?>">
-                                        <input type="submit" class="btn checkout-place-btn" value="Xác nhận đặt hàng" name="form_bank">
-                                    </form>
-
-                                    <form action="../payment/online/init.php" method="post" id="online_form" style="display:none;">
-                                        <div class="checkout-bank-box">
-                                            <strong>Thanh toán trực tuyến (placeholder)</strong><br>
-                                            Bạn có thể chọn phương thức này để tạo đơn. Luồng cổng thanh toán thật sẽ được triển khai ở giai đoạn sau.
-                                        </div>
-                                        <input type="hidden" name="amount" value="<?php echo $final_total; ?>">
-                                        <input type="submit" class="btn checkout-place-btn" value="Xác nhận đặt hàng" name="form_online">
-                                    </form>
+                                    <?php if($paypal_enabled): ?>
+                                        <form id="online_form" style="display:none;" onsubmit="return false;">
+                                            <div class="checkout-bank-box">
+                                                <strong>Thanh toán qua PayPal</strong><br>
+                                                <?php if($paypal_currency !== 'VND'): ?>
+                                                    Số tiền thanh toán trên PayPal: <strong><?php echo htmlspecialchars($paypal_total_amount_display, ENT_QUOTES, 'UTF-8'); ?> <?php echo htmlspecialchars($paypal_currency, ENT_QUOTES, 'UTF-8'); ?></strong><br>
+                                                    Tỉ giá quy đổi: 1 <?php echo htmlspecialchars($paypal_currency, ENT_QUOTES, 'UTF-8'); ?> = <?php echo format_price_vnd($paypal_exchange_rate); ?>
+                                                <?php else: ?>
+                                                    Số tiền thanh toán trên PayPal: <strong><?php echo htmlspecialchars($paypal_total_amount_display, ENT_QUOTES, 'UTF-8'); ?> <?php echo htmlspecialchars($paypal_currency, ENT_QUOTES, 'UTF-8'); ?></strong>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div id="paypal_button_container"></div>
+                                            <div id="paypal_checkout_message" style="display:none;margin-top:10px;padding:8px 10px;border:1px solid #f0c9c9;background:#fff5f5;color:#b94a48;"></div>
+                                        </form>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -619,6 +653,93 @@ if($selected_address) {
         </div>
     </div>
 </div>
+
+<?php if($checkout_access == 1 && $paypal_enabled): ?>
+<script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypal_client_id); ?>&currency=<?php echo urlencode($paypal_currency); ?>&intent=capture"></script>
+<script>
+(function () {
+    var paypalContainer = document.getElementById('paypal_button_container');
+    var messageBox = document.getElementById('paypal_checkout_message');
+    if(!paypalContainer || !messageBox) {
+        return;
+    }
+
+    function showMessage(message) {
+        messageBox.style.display = 'block';
+        messageBox.textContent = message;
+    }
+
+    function clearMessage() {
+        messageBox.style.display = 'none';
+        messageBox.textContent = '';
+    }
+
+    if(typeof window.paypal === 'undefined' || !window.paypal.Buttons) {
+        showMessage('Không thể tải PayPal SDK. Vui lòng tải lại trang và thử lại.');
+        return;
+    }
+
+    var rendered = false;
+    function renderButtonsOnce() {
+        if(rendered) {
+            return;
+        }
+
+        rendered = true;
+        window.paypal.Buttons({
+            createOrder: function () {
+                clearMessage();
+                return fetch('../payment/paypal/create-order.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ source: 'checkout' })
+                })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if(!data || data.success !== true || !data.orderID) {
+                        throw new Error((data && data.message) ? data.message : 'Không tạo được đơn PayPal.');
+                    }
+                    return data.orderID;
+                });
+            },
+            onApprove: function (data) {
+                clearMessage();
+                return fetch('../payment/paypal/capture-order.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderID: data.orderID })
+                })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (result) {
+                    if(!result || result.success !== true) {
+                        throw new Error((result && result.message) ? result.message : 'Thanh toán PayPal không thành công.');
+                    }
+                    window.location.href = result.redirect_url ? result.redirect_url : 'payment_success.php';
+                });
+            },
+            onCancel: function () {
+                showMessage('Bạn đã hủy thanh toán PayPal.');
+            },
+            onError: function () {
+                showMessage('Đã xảy ra lỗi khi kết nối PayPal. Vui lòng thử lại.');
+            }
+        }).render('#paypal_button_container').catch(function () {
+            showMessage('Không thể hiển thị nút PayPal. Vui lòng tải lại trang.');
+        });
+    }
+
+    renderButtonsOnce();
+})();
+</script>
+<?php endif; ?>
 
 
 <?php require_once('footer.php'); ?>

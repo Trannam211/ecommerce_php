@@ -1,6 +1,14 @@
 <?php require_once('header.php'); ?>
 
 <?php
+$product_flash_success = '';
+if(isset($_SESSION['product_flash_success'])) {
+    $product_flash_success = trim((string)$_SESSION['product_flash_success']);
+    unset($_SESSION['product_flash_success']);
+}
+?>
+
+<?php
 if(!isset($_REQUEST['id'])) {
     safe_redirect('index.php');
 } else {
@@ -68,25 +76,9 @@ $statement = $pdo->prepare("UPDATE tbl_product SET p_total_view=? WHERE p_id=?")
 $statement->execute(array($p_total_view,$_REQUEST['id']));
 
 
-$size = array();
-$color = array();
 $variant_map = array();
 $variant_size_ids = array();
 $variant_color_ids = array();
-
-$statement = $pdo->prepare("SELECT * FROM tbl_product_size WHERE p_id=?");
-$statement->execute(array($_REQUEST['id']));
-$result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-foreach ($result as $row) {
-    $size[] = $row['size_id'];
-}
-
-$statement = $pdo->prepare("SELECT * FROM tbl_product_color WHERE p_id=?");
-$statement->execute(array($_REQUEST['id']));
-$result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-foreach ($result as $row) {
-    $color[] = $row['color_id'];
-}
 
 $statement = $pdo->prepare("SHOW TABLES LIKE 'tbl_product_variant'");
 $statement->execute();
@@ -109,6 +101,8 @@ $preview_color_id = isset($_GET['color_preview']) ? (int)$_GET['color_preview'] 
 $preview_size_id = isset($_GET['size_preview']) ? (int)$_GET['size_preview'] : 0;
 $photo_rows_default = array();
 $photo_rows_by_color = array();
+$featured_color_id = 0;
+$featured_matched_pp_id = 0;
 
 $statement = $pdo->prepare("SHOW COLUMNS FROM tbl_product_photo LIKE 'color_id'");
 $statement->execute();
@@ -119,6 +113,12 @@ $statement->execute(array($_REQUEST['id']));
 $result = $statement->fetchAll(PDO::FETCH_ASSOC);
 foreach($result as $row) {
     $photo_color_id = $photo_has_color_column ? (int)$row['color_id'] : 0;
+
+    if($p_featured_photo !== '' && isset($row['photo']) && (string)$row['photo'] === (string)$p_featured_photo && $photo_color_id > 0) {
+        $featured_color_id = $photo_color_id;
+        $featured_matched_pp_id = isset($row['pp_id']) ? (int)$row['pp_id'] : 0;
+    }
+
     if($photo_color_id > 0) {
         if(!isset($photo_rows_by_color[$photo_color_id])) {
             $photo_rows_by_color[$photo_color_id] = array();
@@ -138,11 +138,40 @@ foreach($photo_rows_by_color as $rows_by_color) {
 
 // Build a full gallery once; client-side JS will dim/highlight thumbnails by selected color.
 $gallery_items = array();
-$gallery_items[] = array(
-    'src' => '../assets/uploads/'.$p_featured_photo,
-    'color_id' => 0,
-    'kind' => 'featured'
-);
+$featured_image_src = '';
+if($p_featured_photo !== '') {
+    $featured_image_src = '../assets/uploads/'.$p_featured_photo;
+}
+
+if($featured_image_src === '' && count($photo_rows_by_color) > 0) {
+    foreach($photo_rows_by_color as $cid => $rows_by_color) {
+        if(!empty($rows_by_color)) {
+            $first_color_row = $rows_by_color[0];
+            if(isset($first_color_row['photo']) && trim((string)$first_color_row['photo']) !== '') {
+                $featured_image_src = '../assets/uploads/product_photos/'.$first_color_row['photo'];
+                $featured_color_id = (int)$cid;
+                $featured_matched_pp_id = isset($first_color_row['pp_id']) ? (int)$first_color_row['pp_id'] : 0;
+            }
+            break;
+        }
+    }
+}
+
+if($featured_image_src === '' && count($photo_rows_default) > 0) {
+    $first_default_row = $photo_rows_default[0];
+    if(isset($first_default_row['photo']) && trim((string)$first_default_row['photo']) !== '') {
+        $featured_image_src = '../assets/uploads/product_photos/'.$first_default_row['photo'];
+    }
+}
+
+if($featured_image_src !== '') {
+    $gallery_items[] = array(
+        'src' => $featured_image_src,
+        'color_id' => $featured_color_id,
+        'kind' => 'featured'
+    );
+}
+
 foreach($photo_rows_default as $photo_row) {
     $gallery_items[] = array(
         'src' => '../assets/uploads/product_photos/'.$photo_row['photo'],
@@ -153,6 +182,10 @@ foreach($photo_rows_default as $photo_row) {
 // Keep stable ordering by pp_id ASC as fetched above.
 foreach($photo_rows_by_color as $color_id_key => $rows_by_color) {
     foreach($rows_by_color as $photo_row) {
+        $pp_id = isset($photo_row['pp_id']) ? (int)$photo_row['pp_id'] : 0;
+        if($featured_matched_pp_id > 0 && $pp_id === $featured_matched_pp_id) {
+            continue;
+        }
         $gallery_items[] = array(
             'src' => '../assets/uploads/product_photos/'.$photo_row['photo'],
             'color_id' => (int)$color_id_key,
@@ -161,7 +194,11 @@ foreach($photo_rows_by_color as $color_id_key => $rows_by_color) {
     }
 }
 
-if(count($gallery_items) === 0) {
+if($preview_color_id <= 0 && $featured_color_id > 0) {
+    $preview_color_id = $featured_color_id;
+}
+
+if(count($gallery_items) === 0 && $p_featured_photo !== '') {
     $gallery_items[] = array('src' => '../assets/uploads/'.$p_featured_photo, 'color_id' => 0, 'kind' => 'featured');
 }
 
@@ -369,16 +406,10 @@ if(isset($_POST['form_add_to_cart'])) {
 ?>
 
 <?php
-if($error_message1 != '') {
-    echo "<script>alert('".$error_message1."')</script>";
-}
 if($success_message1 != '') {
     $redirect_id = isset($_REQUEST['id']) ? (int)$_REQUEST['id'] : 0;
-    echo '<script>';
-    echo 'alert(' . json_encode($success_message1, JSON_UNESCAPED_UNICODE) . ');';
-    echo 'window.location.href=' . json_encode('product.php?id='.$redirect_id, JSON_UNESCAPED_UNICODE) . ';';
-    echo '</script>';
-    exit;
+    $_SESSION['product_flash_success'] = $success_message1;
+    safe_redirect('product.php?id='.$redirect_id);
 }
 ?>
 
@@ -435,6 +466,18 @@ if($success_message1 != '') {
         }
     </style>
 	<div class="container">
+        <?php if($error_message1 != ''): ?>
+            <div class="alert alert-danger" role="alert" style="margin-bottom:15px;">
+                <?php echo htmlspecialchars($error_message1, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if($product_flash_success != ''): ?>
+            <div class="alert alert-success" role="alert" style="margin-bottom:15px;">
+                <?php echo htmlspecialchars($product_flash_success, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
+
 		<div class="row">
 			<div class="col-md-12">
                 <div class="breadcrumb mb_30">
@@ -540,7 +583,7 @@ if($success_message1 != '') {
                             <form action="" method="post">
                             <div class="p-quantity">
                                 <div class="row">
-                                    <?php if(count($variant_color_ids) > 0 || count($color) > 0): ?>
+                                    <?php if(count($variant_color_ids) > 0): ?>
                                     <div class="col-md-12">
                                         <strong>Màu sắc</strong> <br>
                                         <select name="color_id" id="product-color-select" class="form-control select2" style="width:auto;">
@@ -550,12 +593,7 @@ if($success_message1 != '') {
                                             $statement->execute();
                                             $result = $statement->fetchAll(PDO::FETCH_ASSOC);
                                             foreach ($result as $row) {
-                                                $show_color = false;
-                                                if(count($variant_color_ids) > 0) {
-                                                    $show_color = isset($variant_color_ids[(int)$row['color_id']]);
-                                                } else {
-                                                    $show_color = in_array($row['color_id'],$color);
-                                                }
+                                                $show_color = isset($variant_color_ids[(int)$row['color_id']]);
                                                 if($show_color) {
                                                     ?>
                                                     <option value="<?php echo $row['color_id']; ?>" <?php if((int)$row['color_id'] === $preview_color_id){echo 'selected';} ?>><?php echo $row['color_name']; ?></option>
@@ -567,7 +605,7 @@ if($success_message1 != '') {
                                     </div>
                                     <?php endif; ?>
 
-                                    <?php if(count($variant_size_ids) > 0 || count($size) > 0): ?>
+                                    <?php if(count($variant_size_ids) > 0): ?>
                                     <div class="col-md-12 mb_20">
                                         <strong>Kích thước</strong> <br>
                                         <select name="size_id" id="product-size-select" class="form-control select2" style="width:auto;display:none;">
@@ -577,12 +615,7 @@ if($success_message1 != '') {
                                             $statement->execute();
                                             $result = $statement->fetchAll(PDO::FETCH_ASSOC);
                                             foreach ($result as $row) {
-                                                $show_size = false;
-                                                if(count($variant_size_ids) > 0) {
-                                                    $show_size = isset($variant_size_ids[(int)$row['size_id']]);
-                                                } else {
-                                                    $show_size = in_array($row['size_id'],$size);
-                                                }
+                                                $show_size = isset($variant_size_ids[(int)$row['size_id']]);
                                                 if($show_size) {
                                                     ?>
                                                     <option value="<?php echo $row['size_id']; ?>" <?php if((int)$row['size_id'] === $preview_size_id){echo 'selected';} ?>><?php echo $row['size_name']; ?></option>

@@ -114,7 +114,7 @@ if(!isset($_SESSION['user'])) {
 			          </a>
 			        </li>
 
-                    <li class="treeview <?php if( ($cur_page == 'size.php') || ($cur_page == 'size-add.php') || ($cur_page == 'size-edit.php') || ($cur_page == 'color.php') || ($cur_page == 'color-add.php') || ($cur_page == 'color-edit.php') || ($cur_page == 'country.php') || ($cur_page == 'country-add.php') || ($cur_page == 'country-edit.php') || ($cur_page == 'shipping-cost.php') || ($cur_page == 'shipping-cost-edit.php') || ($cur_page == 'top-category.php') || ($cur_page == 'top-category-add.php') || ($cur_page == 'top-category-edit.php') || ($cur_page == 'mid-category.php') || ($cur_page == 'mid-category-add.php') || ($cur_page == 'mid-category-edit.php') || ($cur_page == 'end-category.php') || ($cur_page == 'end-category-add.php') || ($cur_page == 'end-category-edit.php') ) {echo 'active';} ?>">
+					<li class="treeview <?php if( ($cur_page == 'size.php') || ($cur_page == 'size-add.php') || ($cur_page == 'size-edit.php') || ($cur_page == 'color.php') || ($cur_page == 'color-add.php') || ($cur_page == 'color-edit.php') || ($cur_page == 'shipping-cost.php') || ($cur_page == 'shipping-cost-edit.php') || ($cur_page == 'top-category.php') || ($cur_page == 'top-category-add.php') || ($cur_page == 'top-category-edit.php') || ($cur_page == 'mid-category.php') || ($cur_page == 'mid-category-add.php') || ($cur_page == 'mid-category-edit.php') || ($cur_page == 'end-category.php') || ($cur_page == 'end-category-add.php') || ($cur_page == 'end-category-edit.php') ) {echo 'active';} ?>">
                         <a href="#">
                             <i class="fa fa-cogs"></i>
                             <span>Cài đặt cửa hàng</span>
@@ -125,7 +125,6 @@ if(!isset($_SESSION['user'])) {
                         <ul class="treeview-menu">
 							<li><a href="size.php"><i class="fa fa-circle-o"></i> Kích cỡ</a></li>
 							<li><a href="color.php"><i class="fa fa-circle-o"></i> Màu sắc</a></li>
-							<li><a href="country.php"><i class="fa fa-circle-o"></i> Quốc gia</a></li>
 							<li><a href="shipping-cost.php"><i class="fa fa-circle-o"></i> Phí vận chuyển</a></li>
 							<li><a href="top-category.php"><i class="fa fa-circle-o"></i> Danh mục cấp 1</a></li>
 							<li><a href="mid-category.php"><i class="fa fa-circle-o"></i> Danh mục cấp 2</a></li>

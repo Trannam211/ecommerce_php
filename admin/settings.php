@@ -736,25 +736,42 @@ if(isset($_POST['form7_10'])) {
 
 if(isset($_POST['form9'])) {
     $cod_on_off = isset($_POST['cod_on_off']) ? 1 : 0;
+    $paypal_on_off = isset($_POST['paypal_on_off']) ? 1 : 0;
+    $paypal_client_id = trim((string)(isset($_POST['paypal_client_id']) ? $_POST['paypal_client_id'] : ''));
+    $paypal_client_secret = trim((string)(isset($_POST['paypal_client_secret']) ? $_POST['paypal_client_secret'] : ''));
+    $paypal_env = strtolower(trim((string)(isset($_POST['paypal_env']) ? $_POST['paypal_env'] : 'sandbox')));
+    if($paypal_env !== 'live') {
+        $paypal_env = 'sandbox';
+    }
+    $paypal_currency = strtoupper(trim((string)(isset($_POST['paypal_currency']) ? $_POST['paypal_currency'] : 'USD')));
+    if(!preg_match('/^[A-Z]{3}$/', $paypal_currency)) {
+        $paypal_currency = 'USD';
+    }
+    $paypal_exchange_rate = isset($_POST['paypal_exchange_rate']) ? (float)$_POST['paypal_exchange_rate'] : 24000;
+    if($paypal_exchange_rate <= 0) {
+        $paypal_exchange_rate = 24000;
+    }
 
-    try {
-        $statement = $pdo->prepare("UPDATE tbl_settings SET cod_on_off=? WHERE id=1");
-        $statement->execute(array($cod_on_off));
-        $success_message = 'Đã lưu thay đổi thành công.';
-    } catch(PDOException $e) {
-        // Backward compatible: auto-add column if old database doesn't have it.
-        $message = $e->getMessage();
-        if(stripos($message, 'Unknown column') !== false || stripos($message, '42S22') !== false) {
+    if($paypal_on_off === 1) {
+        if($paypal_client_id === '' || $paypal_client_secret === '') {
+            $error_message .= 'Vui lòng nhập đầy đủ Client ID và Secret khi bật PayPal.<br>';
+        }
+    }
+
+    if($error_message === '') {
+        try {
+            $statement = $pdo->prepare("UPDATE tbl_settings SET cod_on_off=?, paypal_on_off=?, paypal_client_id=?, paypal_client_secret=?, paypal_env=?, paypal_currency=?, paypal_exchange_rate=? WHERE id=1");
+            $statement->execute(array($cod_on_off, $paypal_on_off, $paypal_client_id, $paypal_client_secret, $paypal_env, $paypal_currency, $paypal_exchange_rate));
+            $success_message = 'Đã lưu thay đổi thành công.';
+        } catch(PDOException $e) {
             try {
-                $pdo->exec("ALTER TABLE tbl_settings ADD COLUMN cod_on_off TINYINT(1) NOT NULL DEFAULT 1");
-                $statement = $pdo->prepare("UPDATE tbl_settings SET cod_on_off=? WHERE id=1");
-                $statement->execute(array($cod_on_off));
+                ensure_project_schema($pdo);
+                $statement = $pdo->prepare("UPDATE tbl_settings SET cod_on_off=?, paypal_on_off=?, paypal_client_id=?, paypal_client_secret=?, paypal_env=?, paypal_currency=?, paypal_exchange_rate=? WHERE id=1");
+                $statement->execute(array($cod_on_off, $paypal_on_off, $paypal_client_id, $paypal_client_secret, $paypal_env, $paypal_currency, $paypal_exchange_rate));
                 $success_message = 'Đã lưu thay đổi thành công.';
             } catch(PDOException $e2) {
                 $error_message .= 'Không thể lưu cài đặt thanh toán. Vui lòng thử lại.<br>';
             }
-        } else {
-            $error_message .= 'Không thể lưu cài đặt thanh toán. Vui lòng thử lại.<br>';
         }
     }
 }
@@ -852,6 +869,24 @@ foreach ($result as $row) {
  //   $stripe_secret_key               = $row['stripe_secret_key'];
     $bank_detail                     = $row['bank_detail'];
     $cod_on_off                      = isset($row['cod_on_off']) ? (int)$row['cod_on_off'] : 1;
+    $paypal_on_off                   = isset($row['paypal_on_off']) ? (int)$row['paypal_on_off'] : 0;
+    $paypal_client_id                = isset($row['paypal_client_id']) ? trim((string)$row['paypal_client_id']) : '';
+    if($paypal_client_id === '' && isset($row['paypal_email'])) {
+        $paypal_client_id = trim((string)$row['paypal_email']);
+    }
+    $paypal_client_secret            = isset($row['paypal_client_secret']) ? trim((string)$row['paypal_client_secret']) : '';
+    $paypal_env                      = isset($row['paypal_env']) ? strtolower(trim((string)$row['paypal_env'])) : 'sandbox';
+    if($paypal_env !== 'live') {
+        $paypal_env = 'sandbox';
+    }
+    $paypal_currency                 = isset($row['paypal_currency']) ? strtoupper(trim((string)$row['paypal_currency'])) : 'USD';
+    if(!preg_match('/^[A-Z]{3}$/', $paypal_currency)) {
+        $paypal_currency = 'USD';
+    }
+    $paypal_exchange_rate            = isset($row['paypal_exchange_rate']) ? (float)$row['paypal_exchange_rate'] : 24000;
+    if($paypal_exchange_rate <= 0) {
+        $paypal_exchange_rate = 24000;
+    }
     $home_service_on_off             = $row['home_service_on_off'];
     $home_welcome_on_off             = $row['home_welcome_on_off'];
     $home_featured_product_on_off    = $row['home_featured_product_on_off'];
@@ -1805,13 +1840,74 @@ foreach ($result as $row) {
                                                 </div>
                                             </div>
 
+                                            <hr style="margin:16px 0;">
+
+                                            <div class="form-group" style="margin-bottom:14px;">
+                                                <label style="display:flex;align-items:center;gap:10px;font-weight:700;margin:0;">
+                                                    <input type="checkbox" id="paypal_on_off" name="paypal_on_off" value="1" <?php echo ((int)$paypal_on_off === 1) ? 'checked' : ''; ?> style="margin:0;">
+                                                    <span>PayPal Online</span>
+                                                </label>
+                                                <div style="margin-top:8px;">
+                                                    <span>Trạng thái:</span>
+                                                    <span id="paypal_status" class="label <?php echo ((int)$paypal_on_off === 1) ? 'label-success' : 'label-default'; ?>">
+                                                        <?php echo ((int)$paypal_on_off === 1) ? 'Đang bật' : 'Đang tắt'; ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Môi trường PayPal</label>
+                                                <div class="col-sm-4">
+                                                    <select name="paypal_env" class="form-control" style="width:auto;">
+                                                        <option value="sandbox" <?php echo ($paypal_env === 'sandbox') ? 'selected' : ''; ?>>Sandbox (Test)</option>
+                                                        <option value="live" <?php echo ($paypal_env === 'live') ? 'selected' : ''; ?>>Live (Production)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">PayPal Client ID</label>
+                                                <div class="col-sm-6">
+                                                    <input type="text" name="paypal_client_id" class="form-control" value="<?php echo htmlspecialchars($paypal_client_id, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nhập Client ID">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">PayPal Secret</label>
+                                                <div class="col-sm-6">
+                                                    <input type="password" name="paypal_client_secret" class="form-control" value="<?php echo htmlspecialchars($paypal_client_secret, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nhập Secret" autocomplete="new-password">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Tiền tệ PayPal</label>
+                                                <div class="col-sm-3">
+                                                    <input type="text" name="paypal_currency" class="form-control" value="<?php echo htmlspecialchars($paypal_currency, ENT_QUOTES, 'UTF-8'); ?>" maxlength="10" placeholder="USD">
+                                                </div>
+                                                <div class="col-sm-5" style="padding-top:8px;color:#6b7785;">
+                                                    Ví dụ: USD, EUR, VND.
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Tỉ giá quy đổi (VND -> PayPal)</label>
+                                                <div class="col-sm-3">
+                                                    <input type="number" name="paypal_exchange_rate" class="form-control" step="0.0001" min="0.0001" value="<?php echo htmlspecialchars((string)$paypal_exchange_rate, ENT_QUOTES, 'UTF-8'); ?>">
+                                                </div>
+                                                <div class="col-sm-5" style="padding-top:8px;color:#6b7785;">
+                                                    Nếu tiền tệ là USD, nhập ví dụ 25000.
+                                                </div>
+                                            </div>
+
                                             <button type="submit" class="btn btn-success" name="form9">Lưu thay đổi</button>
 
                                             <script>
                                             (function () {
                                                 var checkbox = document.getElementById('cod_on_off');
                                                 var badge = document.getElementById('cod_status');
-                                                if (!checkbox || !badge) return;
+                                                var paypalCheckbox = document.getElementById('paypal_on_off');
+                                                var paypalBadge = document.getElementById('paypal_status');
+                                                if (!checkbox || !badge || !paypalCheckbox || !paypalBadge) return;
 
                                                 function syncBadge() {
                                                     if (checkbox.checked) {
@@ -1821,9 +1917,18 @@ foreach ($result as $row) {
                                                         badge.className = 'label label-default';
                                                         badge.textContent = 'Đang tắt';
                                                     }
+
+                                                    if (paypalCheckbox.checked) {
+                                                        paypalBadge.className = 'label label-success';
+                                                        paypalBadge.textContent = 'Đang bật';
+                                                    } else {
+                                                        paypalBadge.className = 'label label-default';
+                                                        paypalBadge.textContent = 'Đang tắt';
+                                                    }
                                                 }
 
                                                 checkbox.addEventListener('change', syncBadge);
+                                                paypalCheckbox.addEventListener('change', syncBadge);
                                                 syncBadge();
                                             })();
                                             </script>

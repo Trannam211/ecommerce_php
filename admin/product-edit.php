@@ -458,23 +458,6 @@ if(isset($_POST['form1'])) {
         }
 		
 
-		$statement = $pdo->prepare("DELETE FROM tbl_product_size WHERE p_id=?");
-		$statement->execute(array($_REQUEST['id']));
-
-		foreach($selected_size_ids as $size_id) {
-			$statement = $pdo->prepare("INSERT INTO tbl_product_size (size_id,p_id) VALUES (?,?)");
-			$statement->execute(array($size_id,$_REQUEST['id']));
-		}
-
-		$statement = $pdo->prepare("DELETE FROM tbl_product_color WHERE p_id=?");
-		$statement->execute(array($_REQUEST['id']));
-
-		$final_color_ids = array_values(array_unique(array_merge($selected_color_ids, $effective_photo_color_ids)));
-		foreach($final_color_ids as $color_id) {
-			$statement = $pdo->prepare("INSERT INTO tbl_product_color (color_id,p_id) VALUES (?,?)");
-			$statement->execute(array($color_id,$_REQUEST['id']));
-		}
-
 		$statement = $pdo->prepare("DELETE FROM tbl_product_variant WHERE p_id=?");
 		$statement->execute(array($_REQUEST['id']));
 
@@ -886,18 +869,6 @@ foreach($color_photo_rows as $cid => $photo_rows) {
 }
 
 $photo_color_selected_map = array();
-
-// Seed from product-color links so edit page always shows all selected colors,
-// even if some colors currently have no uploaded color-specific photo.
-$statement = $pdo->prepare("SELECT color_id FROM tbl_product_color WHERE p_id=?");
-$statement->execute(array($_REQUEST['id']));
-$result = $statement->fetchAll(PDO::FETCH_ASSOC);
-foreach($result as $row) {
-	$cid = isset($row['color_id']) ? (int)$row['color_id'] : 0;
-	if($cid > 0) {
-		$photo_color_selected_map[$cid] = $cid;
-	}
-}
 
 // Keep colors inferred from existing variants.
 for($i=0;$i<count($variant_form_rows);$i++) {

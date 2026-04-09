@@ -65,20 +65,16 @@ foreach ($result as $row) {
 	$(document).ready(function () {
         if($('#advFieldsStatus').length) {
             $('#cod_form').hide();
-            $('#bank_form').hide();
             $('#online_form').hide();
 
             function syncCheckoutPaymentForms() {
                 var advFieldsStatus = $('#advFieldsStatus').val();
                 $('#cod_form').hide();
-                $('#bank_form').hide();
                 $('#online_form').hide();
 
                 if(advFieldsStatus === 'Cash On Delivery') {
                     $('#cod_form').show();
-                } else if(advFieldsStatus === 'Bank Deposit') {
-                    $('#bank_form').show();
-                } else if(advFieldsStatus === 'Online Payment') {
+                } else if(advFieldsStatus === 'PayPal' || advFieldsStatus === 'Online Payment') {
                     $('#online_form').show();
                 }
             }

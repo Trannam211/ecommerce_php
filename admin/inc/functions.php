@@ -402,6 +402,31 @@ function ensure_project_schema(PDO $pdo)
 			$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `bank_detail` TEXT NULL AFTER `cod_on_off`");
 		}
 
+		if(schema_table_exists($pdo, 'tbl_settings')) {
+			if(!schema_column_exists($pdo, 'tbl_settings', 'paypal_on_off')) {
+				$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `paypal_on_off` TINYINT(1) NOT NULL DEFAULT 0 AFTER `cod_on_off`");
+			}
+			if(!schema_column_exists($pdo, 'tbl_settings', 'paypal_client_id')) {
+				$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `paypal_client_id` VARCHAR(255) NULL AFTER `paypal_on_off`");
+			}
+			if(!schema_column_exists($pdo, 'tbl_settings', 'paypal_client_secret')) {
+				$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `paypal_client_secret` VARCHAR(255) NULL AFTER `paypal_client_id`");
+			}
+			if(!schema_column_exists($pdo, 'tbl_settings', 'paypal_env')) {
+				$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `paypal_env` VARCHAR(20) NOT NULL DEFAULT 'sandbox' AFTER `paypal_client_secret`");
+			}
+			if(!schema_column_exists($pdo, 'tbl_settings', 'paypal_currency')) {
+				$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `paypal_currency` VARCHAR(10) NOT NULL DEFAULT 'USD' AFTER `paypal_env`");
+			}
+			if(!schema_column_exists($pdo, 'tbl_settings', 'paypal_exchange_rate')) {
+				$pdo->exec("ALTER TABLE `tbl_settings` ADD COLUMN `paypal_exchange_rate` DECIMAL(15,6) NOT NULL DEFAULT 24000 AFTER `paypal_currency`");
+			}
+
+			$pdo->exec("UPDATE `tbl_settings` SET `paypal_env`='sandbox' WHERE `paypal_env` IS NULL OR TRIM(`paypal_env`)=''");
+			$pdo->exec("UPDATE `tbl_settings` SET `paypal_currency`='USD' WHERE `paypal_currency` IS NULL OR TRIM(`paypal_currency`)=''");
+			$pdo->exec("UPDATE `tbl_settings` SET `paypal_exchange_rate`=24000 WHERE `paypal_exchange_rate` IS NULL OR `paypal_exchange_rate`<=0");
+		}
+
 		if(!schema_table_exists($pdo, 'tbl_import_receipt')) {
 			$pdo->exec(
 				"CREATE TABLE `tbl_import_receipt` (
@@ -410,7 +435,7 @@ function ensure_project_schema(PDO $pdo)
 					`import_date` DATETIME NOT NULL,
 					`status` VARCHAR(20) NOT NULL DEFAULT 'Draft',
 					`note` TEXT NULL,
-					`created_by` INT(11) NOT NULL DEFAULT 0,
+					`created_by` INT(11) NULL DEFAULT NULL,
 					`created_at` DATETIME NOT NULL,
 					`updated_at` DATETIME NOT NULL,
 					`completed_at` DATETIME NULL,
@@ -418,6 +443,20 @@ function ensure_project_schema(PDO $pdo)
 					UNIQUE KEY `uk_receipt_code` (`receipt_code`)
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
 			);
+		}
+
+		if(schema_table_exists($pdo, 'tbl_import_receipt') && schema_column_exists($pdo, 'tbl_import_receipt', 'created_by')) {
+			$statement = $pdo->prepare("SHOW COLUMNS FROM `tbl_import_receipt` LIKE 'created_by'");
+			$statement->execute();
+			$column = $statement->fetch(PDO::FETCH_ASSOC);
+			if($column) {
+				$nullable = isset($column['Null']) ? strtoupper((string)$column['Null']) : 'YES';
+				$default = array_key_exists('Default', $column) ? $column['Default'] : null;
+				if($nullable !== 'YES' || (string)$default === '0') {
+					$pdo->exec("UPDATE `tbl_import_receipt` SET `created_by` = NULL WHERE `created_by` = 0");
+					$pdo->exec("ALTER TABLE `tbl_import_receipt` MODIFY `created_by` INT(11) NULL DEFAULT NULL");
+				}
+			}
 		}
 
 		if(!schema_table_exists($pdo, 'tbl_import_receipt_item')) {

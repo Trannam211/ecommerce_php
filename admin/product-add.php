@@ -295,6 +295,7 @@ if(isset($_POST['form1'])) {
 
     $path = $_FILES['p_featured_photo']['name'];
     $path_tmp = $_FILES['p_featured_photo']['tmp_name'];
+	$ext = '';
 
     if($path!='') {
         $ext = pathinfo( $path, PATHINFO_EXTENSION );
@@ -303,9 +304,6 @@ if(isset($_POST['form1'])) {
             $valid = 0;
 			$error_message .= 'Ảnh đại diện chỉ chấp nhận định dạng PNG<br>';
         }
-    } else {
-    	$valid = 0;
-		$error_message .= 'Bạn phải chọn ảnh đại diện<br>';
     }
 
 	if(!product_files_are_png_only(isset($_FILES['photo']) ? $_FILES['photo'] : array())) {
@@ -357,8 +355,11 @@ if(isset($_POST['form1'])) {
 			$_POST['p_code'] = 'SP'.str_pad((string)$ai_id, 5, '0', STR_PAD_LEFT);
 		}
 
-		$final_name = 'product-featured-'.$ai_id.'.'.$ext;
-        move_uploaded_file( $path_tmp, '../assets/uploads/'.$final_name );
+		$final_name = '';
+		if($path != '' && $ext !== '') {
+			$final_name = 'product-featured-'.$ai_id.'.'.$ext;
+			move_uploaded_file( $path_tmp, '../assets/uploads/'.$final_name );
+		}
 
 		if( isset($_FILES['photo']["name"]) && isset($_FILES['photo']["tmp_name"]) ) {
 			$photo_names = is_array($_FILES['photo']["name"]) ? array_values($_FILES['photo']["name"]) : array();
@@ -412,17 +413,6 @@ if(isset($_POST['form1'])) {
 										$_POST['ecat_id']
 									));
 
-		foreach($selected_size_ids as $size_id) {
-			$statement = $pdo->prepare("INSERT INTO tbl_product_size (size_id,p_id) VALUES (?,?)");
-			$statement->execute(array($size_id,$ai_id));
-		}
-
-		$final_color_ids = array_values(array_unique(array_merge($selected_color_ids, $effective_photo_color_ids)));
-		foreach($final_color_ids as $color_id) {
-			$statement = $pdo->prepare("INSERT INTO tbl_product_color (color_id,p_id) VALUES (?,?)");
-			$statement->execute(array($color_id,$ai_id));
-		}
-
 		for($i=0;$i<count($variant_rows);$i++) {
 			$v_size_id = (int)$variant_rows[$i]['size_id'];
 			$v_color_id = (int)$variant_rows[$i]['color_id'];
@@ -443,10 +433,39 @@ if(isset($_POST['form1'])) {
 				product_save_photo_items($pdo, $ai_id, array_values($color_files), array_values($tmp_color_files), array_values($err_color_files), array_values($size_color_files), $color_id);
 			}
 		}
+
+		// If no featured photo uploaded, clone the first color photo as the main image.
+		if($final_name === '') {
+			$statement = $pdo->prepare("SELECT photo FROM tbl_product_photo WHERE p_id=? AND color_id IS NOT NULL AND color_id > 0 ORDER BY pp_id ASC LIMIT 1");
+			$statement->execute(array($ai_id));
+			$fallback_photo_row = $statement->fetch(PDO::FETCH_ASSOC);
+
+			if($fallback_photo_row && isset($fallback_photo_row['photo'])) {
+				$fallback_photo_name = trim((string)$fallback_photo_row['photo']);
+				$source_path = '../assets/uploads/product_photos/'.$fallback_photo_name;
+				$target_path = '../assets/uploads/'.$fallback_photo_name;
+
+				if($fallback_photo_name !== '' && file_exists($source_path)) {
+					if(!file_exists($target_path)) {
+						@copy($source_path, $target_path);
+					}
+					if(file_exists($target_path)) {
+						$statement = $pdo->prepare("UPDATE tbl_product SET p_featured_photo=? WHERE p_id=?");
+						$statement->execute(array($fallback_photo_name, $ai_id));
+					}
+				}
+			}
+		}
 	
 	    $success_message = 'Thêm sản phẩm thành công.';
     }
 }
+
+$posted_tcat_id = isset($_POST['tcat_id']) ? (int)$_POST['tcat_id'] : 0;
+$posted_mcat_id = isset($_POST['mcat_id']) ? (int)$_POST['mcat_id'] : 0;
+$posted_ecat_id = isset($_POST['ecat_id']) ? (int)$_POST['ecat_id'] : 0;
+$posted_p_is_featured = isset($_POST['p_is_featured']) ? (string)$_POST['p_is_featured'] : '0';
+$posted_p_is_active = isset($_POST['p_is_active']) ? (string)$_POST['p_is_active'] : '0';
 ?>
 
 <section class="content-header">
@@ -743,7 +762,7 @@ if(isset($_POST['form1'])) {
 											$result = $statement->fetchAll(PDO::FETCH_ASSOC);
 											foreach ($result as $row) {
 												?>
-												<option value="<?php echo $row['tcat_id']; ?>"><?php echo $row['tcat_name']; ?></option>
+												<option value="<?php echo $row['tcat_id']; ?>" <?php if((int)$row['tcat_id'] === $posted_tcat_id){echo 'selected';} ?>><?php echo $row['tcat_name']; ?></option>
 												<?php
 											}
 											?>
@@ -755,6 +774,18 @@ if(isset($_POST['form1'])) {
 									<div class="col-sm-4">
 										<select name="mcat_id" class="form-control select2 mid-cat">
 											<option value="">Chọn danh mục cấp 2</option>
+											<?php
+											if($posted_tcat_id > 0) {
+												$statement = $pdo->prepare("SELECT * FROM tbl_mid_category WHERE tcat_id=? ORDER BY mcat_name ASC");
+												$statement->execute(array($posted_tcat_id));
+												$result = $statement->fetchAll(PDO::FETCH_ASSOC);
+												foreach ($result as $row) {
+													?>
+													<option value="<?php echo $row['mcat_id']; ?>" <?php if((int)$row['mcat_id'] === $posted_mcat_id){echo 'selected';} ?>><?php echo $row['mcat_name']; ?></option>
+													<?php
+												}
+											}
+											?>
 										</select>
 									</div>
 								</div>
@@ -763,6 +794,18 @@ if(isset($_POST['form1'])) {
 									<div class="col-sm-4">
 										<select name="ecat_id" class="form-control select2 end-cat">
 											<option value="">Chọn danh mục cấp 3</option>
+											<?php
+											if($posted_mcat_id > 0) {
+												$statement = $pdo->prepare("SELECT * FROM tbl_end_category WHERE mcat_id=? ORDER BY ecat_name ASC");
+												$statement->execute(array($posted_mcat_id));
+												$result = $statement->fetchAll(PDO::FETCH_ASSOC);
+												foreach ($result as $row) {
+													?>
+													<option value="<?php echo $row['ecat_id']; ?>" <?php if((int)$row['ecat_id'] === $posted_ecat_id){echo 'selected';} ?>><?php echo $row['ecat_name']; ?></option>
+													<?php
+												}
+											}
+											?>
 										</select>
 									</div>
 								</div>
@@ -792,6 +835,7 @@ if(isset($_POST['form1'])) {
 										<label for="" class="col-sm-3 control-label"></label>
 										<div class="col-sm-4" style="padding-top:4px;">
 											<input type="file" name="p_featured_photo" accept=".png">
+											<p class="help-block" style="margin-bottom:0;">Có thể để trống. Nếu để trống, hệ thống sẽ tự lấy ảnh màu đầu tiên làm ảnh chính.</p>
 										</div>
 									</div>
 								</div>
@@ -876,15 +920,15 @@ if(isset($_POST['form1'])) {
 												<div class="status-inline-item">
 													<label>Nổi bật</label>
 													<select name="p_is_featured" class="form-control status-select" style="width:100%;">
-														<option value="0">Không</option>
-														<option value="1">Có</option>
+														<option value="0" <?php if($posted_p_is_featured === '0'){echo 'selected';} ?>>Không</option>
+														<option value="1" <?php if($posted_p_is_featured === '1'){echo 'selected';} ?>>Có</option>
 													</select>
 												</div>
 												<div class="status-inline-item">
 													<label>Trạng thái</label>
 													<select name="p_is_active" class="form-control status-select" style="width:100%;">
-														<option value="0">Không</option>
-														<option value="1">Có</option>
+														<option value="0" <?php if($posted_p_is_active === '0'){echo 'selected';} ?>>Không</option>
+														<option value="1" <?php if($posted_p_is_active === '1'){echo 'selected';} ?>>Có</option>
 													</select>
 												</div>
 											</div>
@@ -900,31 +944,31 @@ if(isset($_POST['form1'])) {
 										<div class="form-group">
 											<label for="" class="col-sm-3 control-label">Mô tả chi tiết</label>
 											<div class="col-sm-8">
-												<textarea name="p_description" class="form-control" cols="30" rows="10" id="editor1"></textarea>
+												<textarea name="p_description" class="form-control" cols="30" rows="10" id="editor1"><?php echo isset($_POST['p_description']) ? htmlspecialchars((string)$_POST['p_description'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
 											</div>
 										</div>
 										<div class="form-group">
 											<label for="" class="col-sm-3 control-label">Mô tả ngắn</label>
 											<div class="col-sm-8">
-												<textarea name="p_short_description" class="form-control" cols="30" rows="10" id="editor2"></textarea>
+												<textarea name="p_short_description" class="form-control" cols="30" rows="10" id="editor2"><?php echo isset($_POST['p_short_description']) ? htmlspecialchars((string)$_POST['p_short_description'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
 											</div>
 										</div>
 										<div class="form-group">
 											<label for="" class="col-sm-3 control-label">Đặc điểm nổi bật</label>
 											<div class="col-sm-8">
-												<textarea name="p_feature" class="form-control" cols="30" rows="10" id="editor3"></textarea>
+												<textarea name="p_feature" class="form-control" cols="30" rows="10" id="editor3"><?php echo isset($_POST['p_feature']) ? htmlspecialchars((string)$_POST['p_feature'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
 											</div>
 										</div>
 										<div class="form-group">
 											<label for="" class="col-sm-3 control-label">Hướng dẫn chọn size</label>
 											<div class="col-sm-8">
-												<textarea name="p_condition" class="form-control" cols="30" rows="10" id="editor4"></textarea>
+												<textarea name="p_condition" class="form-control" cols="30" rows="10" id="editor4"><?php echo isset($_POST['p_condition']) ? htmlspecialchars((string)$_POST['p_condition'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
 											</div>
 										</div>
 										<div class="form-group">
 											<label for="" class="col-sm-3 control-label">Chính sách đổi trả</label>
 											<div class="col-sm-8">
-												<textarea name="p_return_policy" class="form-control" cols="30" rows="10" id="editor5"></textarea>
+												<textarea name="p_return_policy" class="form-control" cols="30" rows="10" id="editor5"><?php echo isset($_POST['p_return_policy']) ? htmlspecialchars((string)$_POST['p_return_policy'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
 											</div>
 										</div>
 									</div>

@@ -9,6 +9,8 @@ foreach ($result as $row) {
 }
 
 $search_text_raw = isset($_GET['search_text']) ? trim(strip_tags($_GET['search_text'])) : '';
+$tcat_id_filter = isset($_GET['tcat_id']) ? (int)$_GET['tcat_id'] : 0;
+$mcat_id_filter = isset($_GET['mcat_id']) ? (int)$_GET['mcat_id'] : 0;
 $ecat_id_filter = isset($_GET['ecat_id']) ? (int)$_GET['ecat_id'] : 0;
 $price_min_filter = isset($_GET['price_min']) ? preg_replace('/[^0-9]/', '', (string)$_GET['price_min']) : '';
 $price_max_filter = isset($_GET['price_max']) ? preg_replace('/[^0-9]/', '', (string)$_GET['price_max']) : '';
@@ -19,31 +21,114 @@ if($price_min_filter !== '' && $price_max_filter !== '' && (int)$price_min_filte
     $price_max_filter = $tmp_price;
 }
 
-$has_any_filter = ($search_text_raw !== '' || $ecat_id_filter > 0 || $price_min_filter !== '' || $price_max_filter !== '');
-if(!$has_any_filter) {
-    safe_redirect('index.php');
+// Category data for advanced filtering UI and query validation.
+$statement = $pdo->prepare("SELECT tcat_id, tcat_name FROM tbl_top_category ORDER BY tcat_name ASC");
+$statement->execute();
+$top_categories = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+$statement = $pdo->prepare("SELECT mcat_id, mcat_name, tcat_id FROM tbl_mid_category ORDER BY mcat_name ASC");
+$statement->execute();
+$mid_categories = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+$statement = $pdo->prepare("SELECT ecat_id, ecat_name, mcat_id FROM tbl_end_category ORDER BY ecat_name ASC");
+$statement->execute();
+$end_categories = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+$valid_top_ids = array();
+$mid_to_top_map = array();
+$end_to_mid_map = array();
+
+foreach($top_categories as $trow) {
+    $valid_top_ids[(int)$trow['tcat_id']] = true;
+}
+foreach($mid_categories as $mrow) {
+    $mid_id = (int)$mrow['mcat_id'];
+    $mid_to_top_map[$mid_id] = (int)$mrow['tcat_id'];
+}
+foreach($end_categories as $erow) {
+    $end_to_mid_map[(int)$erow['ecat_id']] = (int)$erow['mcat_id'];
 }
 
-$where_parts = array('p_is_active=1');
+if($tcat_id_filter > 0 && !isset($valid_top_ids[$tcat_id_filter])) {
+    $tcat_id_filter = 0;
+}
+if($mcat_id_filter > 0 && !isset($mid_to_top_map[$mcat_id_filter])) {
+    $mcat_id_filter = 0;
+}
+if($ecat_id_filter > 0 && !isset($end_to_mid_map[$ecat_id_filter])) {
+    $ecat_id_filter = 0;
+}
+
+if($mcat_id_filter > 0) {
+    $parent_top_id = isset($mid_to_top_map[$mcat_id_filter]) ? (int)$mid_to_top_map[$mcat_id_filter] : 0;
+    if($parent_top_id === 0 || ($tcat_id_filter > 0 && $tcat_id_filter !== $parent_top_id)) {
+        $mcat_id_filter = 0;
+        $ecat_id_filter = 0;
+    } else {
+        $tcat_id_filter = $parent_top_id;
+    }
+}
+
+if($ecat_id_filter > 0) {
+    $parent_mid_id = isset($end_to_mid_map[$ecat_id_filter]) ? (int)$end_to_mid_map[$ecat_id_filter] : 0;
+    $parent_top_id = ($parent_mid_id > 0 && isset($mid_to_top_map[$parent_mid_id])) ? (int)$mid_to_top_map[$parent_mid_id] : 0;
+
+    if(
+        $parent_mid_id === 0
+        || $parent_top_id === 0
+        || ($mcat_id_filter > 0 && $mcat_id_filter !== $parent_mid_id)
+        || ($tcat_id_filter > 0 && $tcat_id_filter !== $parent_top_id)
+    ) {
+        $ecat_id_filter = 0;
+    } else {
+        $mcat_id_filter = $parent_mid_id;
+        $tcat_id_filter = $parent_top_id;
+    }
+}
+
+$has_any_filter = (
+    $search_text_raw !== ''
+    || $tcat_id_filter > 0
+    || $mcat_id_filter > 0
+    || $ecat_id_filter > 0
+    || $price_min_filter !== ''
+    || $price_max_filter !== ''
+);
+
+$did_search = $has_any_filter;
+$products = array();
+$pagination = '';
+$total_pages = 0;
+
+if($did_search) {
+
+$where_parts = array('p.p_is_active=1');
 $query_params = array();
+$from_sql = " FROM tbl_product p JOIN tbl_end_category ec ON p.ecat_id=ec.ecat_id JOIN tbl_mid_category mc ON ec.mcat_id=mc.mcat_id";
 
 if($search_text_raw !== '') {
-    $where_parts[] = 'p_name LIKE ?';
+    $where_parts[] = 'p.p_name LIKE ?';
     $query_params[] = '%'.$search_text_raw.'%';
 }
 
 if($ecat_id_filter > 0) {
-    $where_parts[] = 'ecat_id=?';
+    $where_parts[] = 'p.ecat_id=?';
     $query_params[] = $ecat_id_filter;
+} elseif($mcat_id_filter > 0) {
+    $where_parts[] = 'ec.mcat_id=?';
+    $query_params[] = $mcat_id_filter;
+} elseif($tcat_id_filter > 0) {
+    $where_parts[] = 'mc.tcat_id=?';
+    $query_params[] = $tcat_id_filter;
 }
 
 if($price_min_filter !== '') {
-    $where_parts[] = 'p_current_price >= ?';
+    $where_parts[] = 'CAST(p.p_current_price AS UNSIGNED) >= ?';
     $query_params[] = (int)$price_min_filter;
 }
 
 if($price_max_filter !== '') {
-    $where_parts[] = 'p_current_price <= ?';
+    $where_parts[] = 'CAST(p.p_current_price AS UNSIGNED) <= ?';
     $query_params[] = (int)$price_max_filter;
 }
 
@@ -58,13 +143,19 @@ if($page < 1) {
 }
 $start = ($page - 1) * $limit;
 
-$statement = $pdo->prepare("SELECT COUNT(*) FROM tbl_product WHERE {$where_sql}");
+$statement = $pdo->prepare("SELECT COUNT(*){$from_sql} WHERE {$where_sql}");
 $statement->execute($query_params);
 $total_pages = (int)$statement->fetchColumn();
 
 $filter_query = array();
 if($search_text_raw !== '') {
     $filter_query['search_text'] = $search_text_raw;
+}
+if($tcat_id_filter > 0) {
+    $filter_query['tcat_id'] = $tcat_id_filter;
+}
+if($mcat_id_filter > 0) {
+    $filter_query['mcat_id'] = $mcat_id_filter;
 }
 if($ecat_id_filter > 0) {
     $filter_query['ecat_id'] = $ecat_id_filter;
@@ -77,11 +168,10 @@ if($price_max_filter !== '') {
 }
 
 $targetpage = 'search-result.php';
-if(!empty($filter_query)) {
-    $targetpage .= '?'.http_build_query($filter_query);
-}
+$base_query_string = http_build_query($filter_query);
+$page_link_prefix = $targetpage.'?'.($base_query_string !== '' ? ($base_query_string.'&') : '');
 
-$statement = $pdo->prepare("SELECT * FROM tbl_product WHERE {$where_sql} ORDER BY p_id DESC LIMIT {$start}, {$limit}");
+$statement = $pdo->prepare("SELECT p.*{$from_sql} WHERE {$where_sql} ORDER BY p.p_id DESC LIMIT {$start}, {$limit}");
 $statement->execute($query_params);
 $products = $statement->fetchAll(PDO::FETCH_ASSOC);
 
@@ -97,7 +187,7 @@ if($lastpage > 1)
 {
     $pagination .= "<div class=\"pagination\">";
     if ($page > 1)
-        $pagination.= "<a href=\"$targetpage&page=$prev\">&#171; Trang trước</a>";
+        $pagination.= "<a href=\"{$page_link_prefix}page=$prev\">&#171; Trang trước</a>";
     else
         $pagination.= "<span class=\"disabled\">&#171; Trang trước</span>";
     if ($lastpage < 7 + ($adjacents * 2))
@@ -107,7 +197,7 @@ if($lastpage > 1)
             if ($counter == $page)
                 $pagination.= "<span class=\"current\">$counter</span>";
             else
-                $pagination.= "<a href=\"$targetpage&page=$counter\">$counter</a>";
+                $pagination.= "<a href=\"{$page_link_prefix}page=$counter\">$counter</a>";
         }
     }
     elseif($lastpage > 5 + ($adjacents * 2))
@@ -119,51 +209,53 @@ if($lastpage > 1)
                 if ($counter == $page)
                     $pagination.= "<span class=\"current\">$counter</span>";
                 else
-                    $pagination.= "<a href=\"$targetpage&page=$counter\">$counter</a>";
+                    $pagination.= "<a href=\"{$page_link_prefix}page=$counter\">$counter</a>";
             }
             $pagination.= "...";
-            $pagination.= "<a href=\"$targetpage&page=$lpm1\">$lpm1</a>";
-            $pagination.= "<a href=\"$targetpage&page=$lastpage\">$lastpage</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=$lpm1\">$lpm1</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=$lastpage\">$lastpage</a>";
         }
         elseif($lastpage - ($adjacents * 2) > $page && $page > ($adjacents * 2))
         {
-            $pagination.= "<a href=\"$targetpage&page=1\">1</a>";
-            $pagination.= "<a href=\"$targetpage&page=2\">2</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=1\">1</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=2\">2</a>";
             $pagination.= "...";
             for ($counter = $page - $adjacents; $counter <= $page + $adjacents; $counter++)
             {
                 if ($counter == $page)
                     $pagination.= "<span class=\"current\">$counter</span>";
                 else
-                    $pagination.= "<a href=\"$targetpage&page=$counter\">$counter</a>";
+                    $pagination.= "<a href=\"{$page_link_prefix}page=$counter\">$counter</a>";
             }
             $pagination.= "...";
-            $pagination.= "<a href=\"$targetpage&page=$lpm1\">$lpm1</a>";
-            $pagination.= "<a href=\"$targetpage&page=$lastpage\">$lastpage</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=$lpm1\">$lpm1</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=$lastpage\">$lastpage</a>";
         }
         else
         {
-            $pagination.= "<a href=\"$targetpage&page=1\">1</a>";
-            $pagination.= "<a href=\"$targetpage&page=2\">2</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=1\">1</a>";
+            $pagination.= "<a href=\"{$page_link_prefix}page=2\">2</a>";
             $pagination.= "...";
             for ($counter = $lastpage - (2 + ($adjacents * 2)); $counter <= $lastpage; $counter++)
             {
                 if ($counter == $page)
                     $pagination.= "<span class=\"current\">$counter</span>";
                 else
-                    $pagination.= "<a href=\"$targetpage&page=$counter\">$counter</a>";
+                    $pagination.= "<a href=\"{$page_link_prefix}page=$counter\">$counter</a>";
             }
         }
     }
     if ($page < $counter - 1)
-        $pagination.= "<a href=\"$targetpage&page=$next\">Trang sau &#187;</a>";
+        $pagination.= "<a href=\"{$page_link_prefix}page=$next\">Trang sau &#187;</a>";
     else
         $pagination.= "<span class=\"disabled\">Trang sau &#187;</span>";
     $pagination.= "</div>\n";
 }
+
+}
 /* ===================== Pagination Code Ends ================== */
 
-$page_title = 'Kết quả tìm kiếm nâng cao';
+$page_title = $did_search ? 'Kết quả tìm kiếm nâng cao' : 'Tìm kiếm nâng cao';
 if($search_text_raw !== '') {
     $page_title = 'Kết quả tìm kiếm cho: '.$search_text_raw;
 }
@@ -197,31 +289,56 @@ if($search_text_raw !== '') {
                 <form action="search-result.php" method="get" class="search-advanced-box">
                     <?php $csrf->echoInputField(); ?>
                     <div class="row">
-                        <div class="col-md-4 form-group">
+                        <div class="col-md-3 form-group">
                             <label>Tên sản phẩm</label>
                             <input type="text" name="search_text" class="form-control" value="<?php echo htmlspecialchars($search_text_raw, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nhập tên sản phẩm">
                         </div>
-                        <div class="col-md-3 form-group">
-                            <label>Danh mục cấp 3</label>
-                            <select name="ecat_id" class="form-control select2">
-                                <option value="">Tất cả danh mục</option>
-                                <?php
-                                $statement = $pdo->prepare("SELECT ecat_id, ecat_name FROM tbl_end_category ORDER BY ecat_name ASC");
-                                $statement->execute();
-                                $end_categories = $statement->fetchAll(PDO::FETCH_ASSOC);
-                                foreach($end_categories as $end_category_row):
-                                ?>
-                                <option value="<?php echo (int)$end_category_row['ecat_id']; ?>" <?php echo ((int)$end_category_row['ecat_id'] === $ecat_id_filter) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($end_category_row['ecat_name'], ENT_QUOTES, 'UTF-8'); ?>
+                        <div class="col-md-2 form-group">
+                            <label>Danh mục cấp 1</label>
+                            <select id="search_tcat_id" name="tcat_id" class="form-control select2">
+                                <option value="">Tất cả</option>
+                                <?php foreach($top_categories as $top_row): ?>
+                                <option value="<?php echo (int)$top_row['tcat_id']; ?>" <?php echo ((int)$top_row['tcat_id'] === $tcat_id_filter) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($top_row['tcat_name'], ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-2 form-group">
+                            <label>Danh mục cấp 2</label>
+                            <select id="search_mcat_id" name="mcat_id" class="form-control select2">
+                                <option value="">Tất cả</option>
+                                <?php foreach($mid_categories as $mid_row): ?>
+                                <option
+                                    value="<?php echo (int)$mid_row['mcat_id']; ?>"
+                                    data-parent-top="<?php echo (int)$mid_row['tcat_id']; ?>"
+                                    <?php echo ((int)$mid_row['mcat_id'] === $mcat_id_filter) ? 'selected' : ''; ?>
+                                >
+                                    <?php echo htmlspecialchars($mid_row['mcat_name'], ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2 form-group">
+                            <label>Danh mục cấp 3</label>
+                            <select id="search_ecat_id" name="ecat_id" class="form-control select2">
+                                <option value="">Tất cả</option>
+                                <?php foreach($end_categories as $end_row): ?>
+                                <option
+                                    value="<?php echo (int)$end_row['ecat_id']; ?>"
+                                    data-parent-mid="<?php echo (int)$end_row['mcat_id']; ?>"
+                                    <?php echo ((int)$end_row['ecat_id'] === $ecat_id_filter) ? 'selected' : ''; ?>
+                                >
+                                    <?php echo htmlspecialchars($end_row['ecat_name'], ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-1 form-group">
                             <label>Giá từ</label>
                             <input type="text" name="price_min" class="form-control" inputmode="numeric" value="<?php echo htmlspecialchars($price_min_filter, ENT_QUOTES, 'UTF-8'); ?>" placeholder="0">
                         </div>
-                        <div class="col-md-2 form-group">
+                        <div class="col-md-1 form-group">
                             <label>Giá đến</label>
                             <input type="text" name="price_max" class="form-control" inputmode="numeric" value="<?php echo htmlspecialchars($price_max_filter, ENT_QUOTES, 'UTF-8'); ?>" placeholder="1000000">
                         </div>
@@ -234,7 +351,9 @@ if($search_text_raw !== '') {
                 <div class="product product-cat">
                     <div class="row">
                         <?php
-                        if($total_pages <= 0):
+                        if(!$did_search):
+                            echo '<span style="color:#555;font-size:16px;">Chọn tiêu chí ở bộ lọc phía trên rồi nhấn Lọc để xem kết quả.</span>';
+                        elseif($total_pages <= 0):
                             echo '<span style="color:red;font-size:18px;">Không tìm thấy kết quả phù hợp</span>';
                         else:
                             foreach ($products as $row) {
@@ -342,9 +461,7 @@ if($search_text_raw !== '') {
                             }
                             ?>
                             <div class="clear"></div>
-                            <div class="pagination">
-                                <?php echo $pagination; ?>
-                            </div>
+                            <?php echo $pagination; ?>
                             <?php
                         endif;
                         ?>
@@ -355,5 +472,90 @@ if($search_text_raw !== '') {
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var topSelect = document.getElementById('search_tcat_id');
+    var midSelect = document.getElementById('search_mcat_id');
+    var endSelect = document.getElementById('search_ecat_id');
+
+    if(!topSelect || !midSelect || !endSelect) {
+        return;
+    }
+
+    function optionValueVisible(selectEl, value) {
+        if(!value) {
+            return true;
+        }
+        var options = selectEl.querySelectorAll('option');
+        for(var i = 0; i < options.length; i++) {
+            if(String(options[i].value) === String(value) && !options[i].hidden) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function applyParentFilter(selectEl, parentAttr, parentId) {
+        var options = selectEl.querySelectorAll('option');
+        for(var i = 0; i < options.length; i++) {
+            var option = options[i];
+            if(option.value === '') {
+                option.hidden = false;
+                continue;
+            }
+
+            var optionParent = option.getAttribute(parentAttr) || '';
+            option.hidden = (parentId !== '' && optionParent !== parentId);
+        }
+
+        if(!optionValueVisible(selectEl, selectEl.value)) {
+            selectEl.value = '';
+        }
+    }
+
+    function syncSelect2(selectEl) {
+        if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+            window.jQuery(selectEl).trigger('change.select2');
+        }
+    }
+
+    function syncMidAndEnd(clearMid, clearEnd) {
+        var topId = String(topSelect.value || '');
+        applyParentFilter(midSelect, 'data-parent-top', topId);
+        if(clearMid) {
+            midSelect.value = '';
+        }
+
+        var midId = String(midSelect.value || '');
+        applyParentFilter(endSelect, 'data-parent-mid', midId);
+        if(clearEnd) {
+            endSelect.value = '';
+        }
+
+        if(!optionValueVisible(endSelect, endSelect.value)) {
+            endSelect.value = '';
+        }
+
+        syncSelect2(midSelect);
+        syncSelect2(endSelect);
+    }
+
+    topSelect.addEventListener('change', function () {
+        syncMidAndEnd(true, true);
+    });
+
+    midSelect.addEventListener('change', function () {
+        var topId = String(topSelect.value || '');
+        applyParentFilter(midSelect, 'data-parent-top', topId);
+        applyParentFilter(endSelect, 'data-parent-mid', String(midSelect.value || ''));
+        endSelect.value = '';
+        syncSelect2(midSelect);
+        syncSelect2(endSelect);
+    });
+
+    syncMidAndEnd(false, false);
+})();
+</script>
 
 <?php require_once('footer.php'); ?>

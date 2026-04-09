@@ -24,7 +24,10 @@ $total_category = $total_top_category + $total_mid_category + $total_end_categor
 
 $total_product = $count_query("SELECT COUNT(*) FROM tbl_product");
 $total_customers = $count_query("SELECT COUNT(*) FROM tbl_customer WHERE cust_status = ?", array(1));
-$available_shipping = $count_query("SELECT COUNT(*) FROM tbl_shipping_cost");
+$global_shipping_amount = 0;
+if(schema_table_exists($pdo, 'tbl_shipping_cost_all')) {
+	$global_shipping_amount = (float)$scalar_query("SELECT COALESCE(amount,0) FROM tbl_shipping_cost_all WHERE sca_id = 1");
+}
 
 $total_order_all = $count_query("SELECT COUNT(*) FROM tbl_payment");
 $total_order_completed = $count_query("SELECT COUNT(*) FROM tbl_payment WHERE payment_status = ?", array('Completed'));
@@ -326,7 +329,7 @@ $pending_ratio = ($total_order_all > 0)
 					<li><span>Tổng sản phẩm</span><strong><?php echo number_format($total_product); ?></strong></li>
 					<li><span>Tổng danh mục (3 cấp)</span><strong><?php echo number_format($total_category); ?></strong></li>
 					<li><span>Danh mục cấp 1 / 2 / 3</span><strong><?php echo number_format($total_top_category); ?> / <?php echo number_format($total_mid_category); ?> / <?php echo number_format($total_end_category); ?></strong></li>
-					<li><span>Tuyến giao hàng khả dụng</span><strong><?php echo number_format($available_shipping); ?></strong></li>
+					<li><span>Phí vận chuyển chung</span><strong><?php echo format_price_vnd($global_shipping_amount); ?></strong></li>
 				</ul>
 			</div>
 		</div>

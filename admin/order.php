@@ -1,121 +1,6 @@
 <?php require_once('header.php'); ?>
 
 <?php
-$error_message = '';
-if(isset($_POST['form1'])) {
-    $valid = 1;
-    if(empty($_POST['subject_text'])) {
-        $valid = 0;
-        $error_message .= 'Tiêu đề không được để trống\n';
-    }
-    if(empty($_POST['message_text'])) {
-        $valid = 0;
-        $error_message .= 'Nội dung không được để trống\n';
-    }
-    if($valid == 1) {
-
-        $subject_text = strip_tags($_POST['subject_text']);
-        $message_text = strip_tags($_POST['message_text']);
-
-        // Getting Customer Email Thêmress
-        $statement = $pdo->prepare("SELECT * FROM tbl_customer WHERE cust_id=?");
-        $statement->execute(array($_POST['cust_id']));
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-        foreach ($result as $row) {
-            $cust_email = $row['cust_email'];
-        }
-
-        // Getting Admin Email Thêmress
-        $statement = $pdo->prepare("SELECT * FROM tbl_settings WHERE id=1");
-        $statement->execute();
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-        foreach ($result as $row) {
-            $admin_email = $row['contact_email'];
-        }
-
-        $order_detail = '';
-        $statement = $pdo->prepare("SELECT * FROM tbl_payment WHERE payment_id=?");
-        $statement->execute(array($_POST['payment_id']));
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-        foreach ($result as $row) {
-        	
-            if($row['payment_method'] == 'Cash On Delivery'):
-                $payment_details = 'Thanh toán khi nhận hàng (COD)';
-            elseif(!empty($row['bank_transaction_info'])):
-                $payment_details = 'Chi tiết giao dịch: <br>'.$row['bank_transaction_info'];
-            elseif(!empty($row['card_number']) || !empty($row['card_cvv']) || !empty($row['card_month']) || !empty($row['card_year'])):
-                $payment_details = '
-Số thẻ: '.$row['card_number'].'<br>
-Mã CVV: '.$row['card_cvv'].'<br>
-Tháng hết hạn: '.$row['card_month'].'<br>
-Năm hết hạn: '.$row['card_year'].'<br>
-                ';
-            else:
-                $payment_details = 'Phương thức thanh toán: '.$row['payment_method'];
-        	endif;
-
-            $order_detail .= '
-Tên khách hàng: '.$row['customer_name'].'<br>
-Email khách hàng: '.$row['customer_email'].'<br>
-Phương thức thanh toán: '.format_payment_method_vi($row['payment_method']).'<br>
-Ngày thanh toán: '.$row['payment_date'].'<br>
-Số tiền đã thanh toán: '.format_price_vnd($row['paid_amount']).'<br>
-Trạng thái thanh toán: '.format_payment_status_vi($row['payment_status']).'<br>
-Trạng thái giao hàng: '.format_shipping_status_vi($row['shipping_status']).'<br>
-Mã thanh toán: '.$row['payment_id'].'<br>
-            ';
-        }
-
-        $i=0;
-        $statement = $pdo->prepare("SELECT * FROM tbl_order WHERE payment_id=?");
-        $statement->execute(array($_POST['payment_id']));
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);                            
-        foreach ($result as $row) {
-            $i++;
-            $order_detail .= '
-<br><b><u>Sản phẩm '.$i.'</u></b><br>
-Tên sản phẩm: '.$row['product_name'].'<br>
-Kích cỡ: '.$row['size'].'<br>
-Màu sắc: '.$row['color'].'<br>
-Số lượng: '.$row['quantity'].'<br>
-            ';
-        }
-
-        $statement = $pdo->prepare("INSERT INTO tbl_customer_message (subject,message,order_detail,cust_id) VALUES (?,?,?,?)");
-        $statement->execute(array($subject_text,$message_text,$order_detail,$_POST['cust_id']));
-
-        // sending email
-        $to_customer = $cust_email;
-        $message = '
-<html><body>
-    <h3>Nội dung tin nhắn: </h3>
-'.$message_text.'
-    <h3>Chi tiết đơn hàng: </h3>
-'.$order_detail.'
-</body></html>
-';
-        $headers = 'From: ' . $admin_email . "\r\n" .
-                   'Reply-To: ' . $admin_email . "\r\n" .
-                   'X-Mailer: PHP/' . phpversion() . "\r\n" . 
-                   "MIME-Version: 1.0\r\n" . 
-                   "Content-Type: text/html; charset=UTF-8\r\n";
-
-        // Sending email to admin                  
-        mail($to_customer, $subject_text, $message, $headers);
-        
-        $success_message = 'Đã gửi email cho khách hàng thành công.';
-
-    }
-}
-?>
-<?php
-if($error_message != '') {
-    echo "<script>alert('".$error_message."')</script>";
-}
-if($success_message != '') {
-    echo "<script>alert('".$success_message."')</script>";
-}
-
 function admin_is_valid_ymd($value) {
     return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$value) === 1;
 }
@@ -479,14 +364,6 @@ foreach($all_admin_orders as $admin_order_row) {
     overflow-wrap: anywhere;
 }
 
-.btn-message-customer {
-    width: 100%;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    font-size: 12px;
-    padding: 6px 8px;
-}
-
 .order-product-item {
     padding: 10px 0;
     border-bottom: 1px dashed #dcdfe4;
@@ -666,7 +543,6 @@ foreach($all_admin_orders as $admin_order_row) {
 .order-management-card,
 .order-filter-nav a,
 .order-filter-count,
-.btn-message-customer,
 .order-payment-method,
 .status-badge,
 .order-status-actions .btn,
@@ -778,44 +654,6 @@ foreach($all_admin_orders as $admin_order_row) {
                        <div class="order-customer-name"><?php echo $row['customer_name']; ?></div>
                        <div class="order-customer-email"><?php echo $row['customer_email']; ?></div>
                        <div class="order-customer-code">Phường/Xã: <?php echo htmlspecialchars((string)($row['delivery_ward'] !== '' ? $row['delivery_ward'] : 'Chưa cập nhật'), ENT_QUOTES, 'UTF-8'); ?></div>
-                       <a href="#" data-toggle="modal" data-target="#model-<?php echo $i; ?>" class="btn btn-warning btn-sm btn-message-customer"><i class="fa fa-envelope-o"></i> Gửi tin nhắn</a>
-                            <div id="model-<?php echo $i; ?>" class="modal fade" role="dialog">
-								<div class="modal-dialog">
-									<div class="modal-content">
-										<div class="modal-header">
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h4 class="modal-title" style="font-weight: bold;">Gửi tin nhắn</h4>
-										</div>
-										<div class="modal-body" style="font-size: 14px">
-											<form action="" method="post">
-                                                <input type="hidden" name="cust_id" value="<?php echo $row['customer_id']; ?>">
-                                                <input type="hidden" name="payment_id" value="<?php echo $row['payment_id']; ?>">
-												<table class="table table-bordered">
-													<tr>
-                                                        <td>Tiêu đề</td>
-														<td>
-                                                            <input type="text" name="subject_text" class="form-control" style="width: 100%;">
-														</td>
-													</tr>
-                                                    <tr>
-                                                        <td>Nội dung</td>
-                                                        <td>
-                                                            <textarea name="message_text" class="form-control" cols="30" rows="10" style="width:100%;height: 200px;"></textarea>
-                                                        </td>
-                                                    </tr>
-													<tr>
-														<td></td>
-                                                        <td><input type="submit" value="Gửi tin nhắn" name="form1" class="btn btn-warning btn-sm"></td>
-													</tr>
-												</table>
-											</form>
-										</div>
-										<div class="modal-footer">
-                                            <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
-										</div>
-									</div>
-								</div>
-							</div>
                         </td>
                         <td>
                            <?php

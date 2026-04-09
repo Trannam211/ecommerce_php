@@ -159,7 +159,7 @@ if(!empty($final_ecat_ids)) {
             $next = $page + 1;
             $lpm1 = $lastpage - 1;
 
-            $pagination .= '<div class="pagination">';
+            $pagination .= '<div class="pagination" style="display:inline-block;">';
             if($page > 1) {
                 $pagination .= '<a href="'.$targetpage.'&page='.$prev.'">&#171; Trang trước</a>';
             } else {
@@ -228,10 +228,7 @@ if(!empty($final_ecat_ids)) {
 <div class="page">
     <div class="container">
         <div class="row">
-          <div class="col-md-3">
-                <?php require_once('sidebar-category.php'); ?>
-            </div>
-            <div class="col-md-9">
+            <div class="col-md-12">
                 
                 <div class="product product-cat">
 
@@ -242,7 +239,7 @@ if(!empty($final_ecat_ids)) {
                         } else {
                             foreach ($category_products as $row) {
                                 ?>
-                                <div class="col-md-4 item item-product-cat">
+                                <div class="col-lg-3 col-md-3 col-sm-6 item item-product-cat">
                                     <div class="inner">
                                         <div class="thumb">
                                             <a class="product-link" href="product.php?id=<?php echo $row['p_id']; ?>">
@@ -348,7 +345,7 @@ if(!empty($final_ecat_ids)) {
                     </div>
 
                     <?php if($pagination != ''): ?>
-                    <div class="pagination" style="overflow:hidden;">
+                    <div style="overflow:hidden;text-align:right;">
                         <?php echo $pagination; ?>
                     </div>
                     <?php endif; ?>

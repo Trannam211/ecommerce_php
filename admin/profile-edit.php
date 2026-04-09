@@ -4,6 +4,7 @@
 if(isset($_POST['form_all'])) {
 	$valid = 1;
 	$change_password = false;
+	$new_password_hash = '';
 
 	$statement = $pdo->prepare("SELECT * FROM tbl_user WHERE id=?");
 	$statement->execute(array($_SESSION['user']['id']));
@@ -62,17 +63,40 @@ if(isset($_POST['form_all'])) {
 	$password = isset($_POST['password']) ? trim($_POST['password']) : '';
 	$re_password = isset($_POST['re_password']) ? trim($_POST['re_password']) : '';
 	if($current_password !== '' || $password !== '' || $re_password !== '') {
+		$stored_password_trimmed = trim((string)$current_password_hash);
+		$looks_like_password_hash = (
+			strpos($stored_password_trimmed, '$2y$') === 0 ||
+			strpos($stored_password_trimmed, '$2a$') === 0 ||
+			strpos($stored_password_trimmed, '$2b$') === 0 ||
+			strpos($stored_password_trimmed, '$argon2') === 0
+		);
+
+		$current_password_ok = false;
+		if(function_exists('password_verify') && $looks_like_password_hash) {
+			$current_password_ok = password_verify($current_password, $stored_password_trimmed);
+		} elseif(preg_match('/^[a-f0-9]{32}$/i', $stored_password_trimmed)) {
+			$current_password_ok = hash_equals(strtolower($stored_password_trimmed), md5($current_password));
+		} else {
+			$current_password_ok = hash_equals($stored_password_trimmed, $current_password);
+		}
+
 		if($current_password === '' || $password === '' || $re_password === '') {
 			$valid = 0;
 			$error_message .= 'Vui lòng nhập đầy đủ mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu mới<br>';
-		} elseif(md5($current_password) != $current_password_hash) {
+		} elseif(!$current_password_ok) {
 			$valid = 0;
 			$error_message .= 'Mật khẩu hiện tại không đúng<br>';
 		} elseif($password != $re_password) {
 			$valid = 0;
 			$error_message .= 'Mật khẩu xác nhận không khớp<br>';
 		} else {
-			$change_password = true;
+			$new_password_hash = password_hash($password, PASSWORD_DEFAULT);
+			if($new_password_hash === false) {
+				$valid = 0;
+				$error_message .= 'Không thể mã hóa mật khẩu mới. Vui lòng thử lại<br>';
+			} else {
+				$change_password = true;
+			}
 		}
 	}
 
@@ -99,9 +123,9 @@ if(isset($_POST['form_all'])) {
 		}
 
 		if($change_password) {
-			$_SESSION['user']['password'] = md5($password);
+			$_SESSION['user']['password'] = $new_password_hash;
 			$statement = $pdo->prepare("UPDATE tbl_user SET password=? WHERE id=?");
-			$statement->execute(array(md5($password),$_SESSION['user']['id']));
+			$statement->execute(array($new_password_hash,$_SESSION['user']['id']));
 		}
 
 		$success_message = 'Đã cập nhật hồ sơ thành công.';

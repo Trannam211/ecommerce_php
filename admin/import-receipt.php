@@ -31,7 +31,9 @@ if(isset($_POST['form_create'])) {
     }
 
     $receipt_code = generate_import_receipt_code($pdo);
-    $created_by = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+    $created_by = (isset($_SESSION['user']['id']) && (int)$_SESSION['user']['id'] > 0)
+        ? (int)$_SESSION['user']['id']
+        : null;
     $now = date('Y-m-d H:i:s');
 
     $statement = $pdo->prepare("INSERT INTO tbl_import_receipt (receipt_code, import_date, status, note, created_by, created_at, updated_at, completed_at) VALUES (?,?,?,?,?,?,?,NULL)");

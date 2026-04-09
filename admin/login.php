@@ -16,25 +16,56 @@ if(isset($_POST['form1'])) {
 		$email = strip_tags($_POST['email']);
 		$password = strip_tags($_POST['password']);
 
-    	$statement = $pdo->prepare("SELECT * FROM tbl_user WHERE email=? AND status=?");
-    	$statement->execute(array($email,'Active'));
-    	$total = $statement->rowCount();    
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);    
-        if($total==0) {
-            $error_message .= 'Email không đúng<br>';
-        } else {       
-            foreach($result as $row) { 
-                $row_password = $row['password'];
-            }
-        
-            if( $row_password != md5($password) ) {
-                $error_message .= 'Mật khẩu không đúng<br>';
-            } else {       
-            
+	    	$statement = $pdo->prepare("SELECT * FROM tbl_user WHERE email=? AND status=? ORDER BY id DESC LIMIT 1");
+	    	$statement->execute(array($email,'Active'));
+		$row = $statement->fetch(PDO::FETCH_ASSOC);
+
+		if(!$row) {
+			$error_message .= 'Email không đúng<br>';
+		} else {
+			$stored_password = trim((string)$row['password']);
+			$looks_like_password_hash = (
+				strpos($stored_password, '$2y$') === 0 ||
+				strpos($stored_password, '$2a$') === 0 ||
+				strpos($stored_password, '$2b$') === 0 ||
+				strpos($stored_password, '$argon2') === 0
+			);
+
+			$password_ok = false;
+			if(function_exists('password_verify') && $looks_like_password_hash) {
+				$password_ok = password_verify($password, $stored_password);
+			} elseif(preg_match('/^[a-f0-9]{32}$/i', $stored_password)) {
+				$password_ok = hash_equals(strtolower($stored_password), md5($password));
+			} else {
+				$password_ok = hash_equals($stored_password, $password);
+			}
+
+			if(!$password_ok) {
+				$error_message .= 'Mật khẩu không đúng<br>';
+			} else {
+				// Auto-upgrade legacy MD5/plaintext and rehash old cost/algorithm.
+				$should_update_hash = false;
+				if($looks_like_password_hash) {
+					if(function_exists('password_needs_rehash') && password_needs_rehash($stored_password, PASSWORD_DEFAULT)) {
+						$should_update_hash = true;
+					}
+				} else {
+					$should_update_hash = true;
+				}
+
+				if($should_update_hash) {
+					$new_hash = password_hash($password, PASSWORD_DEFAULT);
+					if($new_hash !== false) {
+						$statement = $pdo->prepare("UPDATE tbl_user SET password=? WHERE id=?");
+						$statement->execute(array($new_hash, (int)$row['id']));
+						$row['password'] = $new_hash;
+					}
+				}
+
 				$_SESSION['user'] = $row;
-                header("location: index.php");
-            }
-        }
+				header("location: index.php");
+			}
+		}
     }
 
     

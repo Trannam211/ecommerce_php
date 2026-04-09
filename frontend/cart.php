@@ -18,6 +18,8 @@ if(!isset($_SESSION['customer'])) {
 
 <?php
 $error_message = '';
+$cart_notice_type = '';
+$cart_notice_message = '';
 if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checkout']) || isset($_POST['auto_update'])) {
 
     $is_auto_update = isset($_POST['auto_update']) && $_POST['auto_update'] === '1';
@@ -129,14 +131,14 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
     if($allow_update == 1 && $is_auto_update) {
         safe_redirect('cart.php');
     }
-    ?>
 
-    <?php if($allow_update == 0): ?>
-        <script>alert('<?php echo $error_message; ?>');</script>
-    <?php else: ?>
-        <script>alert('Cập nhật số lượng sản phẩm thành công!');</script>
-    <?php endif; ?>
-    <?php
+    if($allow_update == 0) {
+        $cart_notice_type = 'danger';
+        $cart_notice_message = $error_message;
+    } elseif(isset($_POST['form1'])) {
+        $cart_notice_type = 'success';
+        $cart_notice_message = 'Cập nhật số lượng sản phẩm thành công!';
+    }
 
 }
 ?>
@@ -147,6 +149,15 @@ if(isset($_POST['form1']) || isset($_POST['go_home']) || isset($_POST['go_checko
         <h1>Giỏ hàng</h1>
     </div>
 </div>
+
+<?php if($cart_notice_message !== ''): ?>
+    <?php $cart_notice_text = str_replace('\\n', "\n", $cart_notice_message); ?>
+    <div class="container" style="margin-top:15px;">
+        <div class="alert alert-<?php echo ($cart_notice_type === 'success') ? 'success' : 'danger'; ?>" role="alert" style="margin-bottom:0;">
+            <?php echo nl2br(htmlspecialchars($cart_notice_text, ENT_QUOTES, 'UTF-8')); ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <style>
     .cart-head {
