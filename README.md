@@ -61,10 +61,10 @@ Trong phạm vi đề tài, hệ thống website bán thời trang được xây
 ### Dashboard Admin:
 <img width="1916" height="904" alt="image" src="https://github.com/user-attachments/assets/f56a0923-9999-4758-9208-9fce45dbcd06" />
 
-### Quản lý sản phẩm:
+#### Quản lý sản phẩm:
 <img width="1911" height="901" alt="image" src="https://github.com/user-attachments/assets/ffc4c06c-12e5-459e-9ed7-32bb00d2d286" />
 
-### Quản lý nhập hàng:
+#### Quản lý nhập hàng:
 <img width="1900" height="903" alt="image" src="https://github.com/user-attachments/assets/e39d2d98-6a36-4557-a08a-738e4da5d1f0" />
 
 #### Quản lý đơn hàng:
