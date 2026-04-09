@@ -76,6 +76,7 @@ Trong phạm vi đề tài, hệ thống website bán thời trang được xây
 
 ## Cấu trúc dự án
 
+```text
 eCommerce-website-in-PHP-main/
 |-- admin/                     # Admin panel (quản lý sản phẩm, đơn hàng, khách hàng, slider,...)
 |   |-- css/                   # CSS admin
@@ -112,4 +113,3 @@ eCommerce-website-in-PHP-main/
 |
 |-- index.php                  # Entry root
 `-- README.md                  # Tài liệu dự án
-
