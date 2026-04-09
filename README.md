@@ -50,7 +50,7 @@ Trong phạm vi đề tài, hệ thống website bán thời trang được xây
 <img width="1891" height="886" alt="image" src="https://github.com/user-attachments/assets/fb624868-1c81-482e-bcc0-e627bb977ffd" />
 
 ### Trang chi tiết sản phẩm:
-<img width="1908" height="905" alt="image" src="https://github.com/user-attachments/assets/248a9f5b-272c-4ed9-8336-5b277c6bf2ab" />
+<img width="1069" height="893" alt="image" src="https://github.com/user-attachments/assets/511e4d60-ebb9-4c86-a69a-cdedb3bb3dad" />
 
 ### Giỏ hàng:
 <img width="1919" height="903" alt="image" src="https://github.com/user-attachments/assets/68da735d-22c6-497e-a46c-c2e7edd12bf1" />
