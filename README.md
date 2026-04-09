@@ -5,80 +5,38 @@ Dự án website bán thời trang trực tuyến được xây dựng bằng ng
 <img width="1898" height="825" alt="image" src="https://github.com/user-attachments/assets/8068a2cc-8c86-421e-bbac-6ab128d71fa1" />
 
 
-## Technologies:
+## Công nghệ sử dụng:
 
-HTML: Page layout and design
+Ngôn ngữ lập trình: PHP
+Cơ sở dữ liệu: MySQL
+Giao diện người dùng: HTML, CSS và JavaScript. Ngoài ra, dự án có sử dụng Bootstrap để hỗ trợ bố cục giao diện và tăng khả năng tương thích trên nhiều thiết bị.
+Triển khai:
 
-CSS: Design
 
-JS: Fontend
+## Môi trường hỗ trợ:
+Dự án có thể chạy trên Windows, macOS, Linux và truy cập thông qua các trình duyệt phổ biến như Google Chrome, Microsoft Edge và Mozilla Firefox.
 
-PHP: Backend
-
-Bootstrap
-
-Java Script
-
-## Supported Operating Systems:
-You can run this project in the following operating systems:
-
-Windows
-
-MAC
-
-Linux
-
-## Features:
-
-1-Client-Side Interaction.
-
-2-Admin Panel.
-
-3-Customer Registration.
-
-4-Add to Cart System.
-
-5-Checkout System.
-
-6-Update Billing Address.
-
-7-Search, Filter Products.
-
-8-Product Categories.
-
-9-Featured Products.
-
-10-Latest Products.
-
-11-Popular Products.
-
-12-View Order History.
-
-13-Update Customer Profile.
-
-14-Manage Website Settings.
-
-15-Manage Shop Settings.
-
-16-Product Management.
-
-17-Order Management.
-
-18-Pending Orders.
-
-19-Shippings.
-
-20-Set up Image Sliders.
-
-21-Set Shipping Charges.
-
-22-Page Settings.
-
-23-Set Social Media Links.
-
-24-Subscribers.
-
-25-View Registered Customers.
+## Phạm vi thực hiện:
+Trong phạm vi đề tài, hệ thống website bán thời trang được xây dựng theo mô hình thương mại điện tử cơ bản, bao gồm hai nhóm chức năng chính là chức năng dành cho người dùng (end-user) và chức năng dành cho quản trị viên (admin).
+### Phạm vi chức năng đối với người dùng (end-user):
+- Hiển thị danh sách sản phẩm, duyệt sản phẩm theo danh mục.
+- Tìm kiếm và lọc sản phẩm theo nhu cầu.
+- Xem chi tiết sản phẩm, hình ảnh và thông tin liên quan.
+- Thêm sản phẩm vào giỏ hàng, cập nhật hoặc xóa sản phẩm trong giỏ.
+- Thực hiện đặt hàng theo quy trình của hệ thống.
+- Đăng ký, đăng nhập, quên mật khẩu và cập nhật thông tin tài khoản.
+- Nhập và quản lý thông tin giao hàng, địa chỉ nhận hàng.
+- Theo dõi lịch sử mua hàng, xem chi tiết và trạng thái đơn hàng, hủy đơn khi cần.
+- Hiển thị các sản phẩm nổi bật, sản phẩm mới và sản phẩm phổ biến.
+### Phạm vi chức năng đối với quản trị viên (admin):
+- Quản lý sản phẩm (thêm, sửa, xóa, cập nhật thông tin).
+- Quản lý danh mục sản phẩm theo nhiều cấp.
+- Quản lý thuộc tính sản phẩm (màu sắc, kích cỡ, hình ảnh, giá bán).
+- Quản lý nhập hàng theo lô, theo dõi tồn kho.
+- Quản lý đơn hàng, trạng thái xử lý và thanh toán.
+- Quản lý khách hàng và thông tin tài khoản.
+- Quản lý phí vận chuyển và các nội dung hiển thị trên website.
+- Thống kê, báo cáo phục vụ công tác quản lý và vận hành.
 
 ## Featured, Latest and Popular Products:.
 
